@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { formatJstDateTime, formatJstTime } from "@/lib/datetime";
 import { apiErrorMessage, fetchJson } from "@/lib/fetchJson";
-import { useSession } from "@/lib/useSession";
+import {
+  USER_NAME_STORAGE_KEY,
+  USER_STORAGE_KEY,
+} from "@/lib/constants";
 import { getConfessionClientKey } from "@/lib/confessionClient";
 import type { ConfessionPost } from "@/lib/types";
 
@@ -26,7 +29,6 @@ function markComforted(postId: string) {
 }
 
 export function ConfessionRoom() {
-  const { user } = useSession();
   const [threads, setThreads] = useState<ConfessionPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,14 +59,14 @@ export function ConfessionRoom() {
   }, []);
 
   useEffect(() => {
-    if (user?.displayName) setDisplayName(user.displayName);
+    setDisplayName(localStorage.getItem(USER_NAME_STORAGE_KEY) ?? "");
     fetchThreads();
     const interval = setInterval(fetchThreads, 20_000);
     return () => clearInterval(interval);
-  }, [fetchThreads, user?.displayName]);
+  }, [fetchThreads]);
 
   const submitPost = async (body: string, parentId?: string) => {
-    const name = (user?.displayName ?? displayName).trim();
+    const name = displayName.trim();
     if (!name) {
       setError("名前を入力してください");
       return;
@@ -75,6 +77,7 @@ export function ConfessionRoom() {
     setError(null);
 
     try {
+      const userId = localStorage.getItem(USER_STORAGE_KEY) ?? undefined;
       const { res, data } = await fetchJson<{ post?: ConfessionPost; error?: string }>(
         "/api/confession",
         {
@@ -84,11 +87,14 @@ export function ConfessionRoom() {
             displayName: name,
             body: body.trim(),
             parentId,
+            userId,
           }),
         }
       );
 
       if (!res.ok) throw new Error(apiErrorMessage(data, "投稿に失敗しました"));
+
+      localStorage.setItem(USER_NAME_STORAGE_KEY, name);
       setNewBody("");
       setReplyBody("");
       setReplyTo(null);
@@ -150,16 +156,14 @@ export function ConfessionRoom() {
         className="rounded-2xl border border-fail-border/80 bg-fail-card/80 p-4 backdrop-blur-sm"
       >
         <p className="mb-3 text-xs font-semibold text-zinc-500">新しい懺悔</p>
-        {!user && (
-          <input
-            className="input mb-3"
-            placeholder="名前"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            maxLength={32}
-            required
-          />
-        )}
+        <input
+          className="input mb-3"
+          placeholder="名前"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          maxLength={32}
+          required
+        />
         <textarea
           className="input min-h-[88px] resize-none"
           placeholder="今日の失敗、言い訳、本音…"

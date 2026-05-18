@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { apiErrorResponse, supabaseConfigResponse } from "@/lib/apiRoute";
-import { requireUserSession } from "@/lib/requireSession";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 const createSchema = z.object({
@@ -21,70 +20,64 @@ export async function GET(request: NextRequest) {
   if (configError) return configError;
 
   try {
-  const userId = request.nextUrl.searchParams.get("userId");
-  const supabase = getSupabaseAdmin();
+    const userId = request.nextUrl.searchParams.get("userId");
+    const supabase = getSupabaseAdmin();
 
-  if (userId) {
-    const auth = await requireUserSession();
-    if ("error" in auth) return auth.error;
-    if (auth.session.userId !== userId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (userId) {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ tasks: data ?? [] });
     }
 
-    const { data, error } = await supabase
-      .from("tasks")
+    const { data: timeline, error: timelineError } = await supabase
+      .from("timeline_posts")
       .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(50);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (timelineError) {
+      return NextResponse.json({ error: timelineError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ tasks: data ?? [] });
-  }
+    const posts = timeline ?? [];
+    const userIds = [...new Set(posts.map((p) => p.user_id))];
+    const taskIds = posts.map((p) => p.task_id);
+    const failCounts: Record<string, number> = {};
+    const donateUrls: Record<string, string | null> = {};
 
-  const { data: timeline, error: timelineError } = await supabase
-    .from("timeline_posts")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  if (timelineError) {
-    return NextResponse.json({ error: timelineError.message }, { status: 500 });
-  }
-
-  const posts = timeline ?? [];
-  const userIds = [...new Set(posts.map((p) => p.user_id))];
-  const taskIds = posts.map((p) => p.task_id);
-  const failCounts: Record<string, number> = {};
-  const donateUrls: Record<string, string | null> = {};
-
-  for (const uid of userIds) {
-    const { data: count } = await supabase.rpc("get_consecutive_fail_count", {
-      p_user_id: uid,
-    });
-    failCounts[uid] = (count as number) ?? 0;
-  }
-
-  if (taskIds.length > 0) {
-    const { data: tasks } = await supabase
-      .from("tasks")
-      .select("id, donate_url")
-      .in("id", taskIds);
-
-    for (const t of tasks ?? []) {
-      donateUrls[t.id] = t.donate_url;
+    for (const uid of userIds) {
+      const { data: count } = await supabase.rpc("get_consecutive_fail_count", {
+        p_user_id: uid,
+      });
+      failCounts[uid] = (count as number) ?? 0;
     }
-  }
 
-  const enriched = posts.map((p) => ({
-    ...p,
-    consecutive_fail_count: failCounts[p.user_id] ?? 0,
-    donate_url: donateUrls[p.task_id] ?? null,
-  }));
+    if (taskIds.length > 0) {
+      const { data: tasks } = await supabase
+        .from("tasks")
+        .select("id, donate_url")
+        .in("id", taskIds);
 
-  return NextResponse.json({ timeline: enriched });
+      for (const t of tasks ?? []) {
+        donateUrls[t.id] = t.donate_url;
+      }
+    }
+
+    const enriched = posts.map((p) => ({
+      ...p,
+      consecutive_fail_count: failCounts[p.user_id] ?? 0,
+      donate_url: donateUrls[p.task_id] ?? null,
+    }));
+
+    return NextResponse.json({ timeline: enriched });
   } catch (err) {
     return apiErrorResponse(err);
   }
@@ -94,72 +87,91 @@ export async function POST(request: NextRequest) {
   const configError = supabaseConfigResponse();
   if (configError) return configError;
 
-  const auth = await requireUserSession();
-  if ("error" in auth) return auth.error;
-
   try {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
 
-  const parsed = createSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Validation failed", details: parsed.error.flatten() },
-      { status: 400 }
-    );
-  }
+    const parsed = createSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
 
-  const data = parsed.data;
-  const supabase = getSupabaseAdmin();
-  const userId = auth.session.userId;
+    const data = parsed.data;
+    const supabase = getSupabaseAdmin();
 
-  await supabase
-    .from("users")
-    .update({ display_name: data.displayName.trim() })
-    .eq("id", userId);
+    let userId = data.userId;
 
-  const { data: task, error: taskError } = await supabase
-    .from("tasks")
-    .insert({
-      user_id: userId,
-      title: data.title,
-      deadline_at: data.deadlineAt,
-      penalty_amount: data.penaltyAmount,
-      donation_destination: data.donationDestination,
-      donate_url: data.donateUrl || null,
-      status: "pending",
-    })
-    .select("*")
-    .single();
+    if (userId) {
+      const { data: existing } = await supabase
+        .from("users")
+        .select("id")
+        .eq("id", userId)
+        .single();
 
-  if (taskError || !task) {
-    return NextResponse.json(
-      { error: taskError?.message ?? "Failed to create task" },
-      { status: 500 }
-    );
-  }
+      if (!existing) userId = undefined;
+    }
 
-  const { error: notifyError } = await supabase
-    .from("notification_targets")
-    .insert({
-      task_id: task.id,
-      type: "email",
-      label: data.notifyName,
-      destination: data.notifyEmail,
+    if (!userId) {
+      const { data: user, error: userError } = await supabase
+        .from("users")
+        .insert({ display_name: data.displayName })
+        .select("id, display_name")
+        .single();
+
+      if (userError || !user) {
+        return NextResponse.json(
+          { error: userError?.message ?? "Failed to create user" },
+          { status: 500 }
+        );
+      }
+      userId = user.id;
+    }
+
+    const { data: task, error: taskError } = await supabase
+      .from("tasks")
+      .insert({
+        user_id: userId,
+        title: data.title,
+        deadline_at: data.deadlineAt,
+        penalty_amount: data.penaltyAmount,
+        donation_destination: data.donationDestination,
+        donate_url: data.donateUrl || null,
+        status: "pending",
+      })
+      .select("*")
+      .single();
+
+    if (taskError || !task) {
+      return NextResponse.json(
+        { error: taskError?.message ?? "Failed to create task" },
+        { status: 500 }
+      );
+    }
+
+    const { error: notifyError } = await supabase
+      .from("notification_targets")
+      .insert({
+        task_id: task.id,
+        type: "email",
+        label: data.notifyName,
+        destination: data.notifyEmail,
+      });
+
+    if (notifyError) {
+      return NextResponse.json({ error: notifyError.message }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      user: { id: userId, display_name: data.displayName },
+      task,
     });
-
-  if (notifyError) {
-    return NextResponse.json({ error: notifyError.message }, { status: 500 });
-  }
-
-  return NextResponse.json({
-    user: { id: userId, display_name: data.displayName },
-    task,
-  });
   } catch (err) {
     return apiErrorResponse(err);
   }

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse, supabaseConfigResponse } from "@/lib/apiRoute";
-import { requireUserSession } from "@/lib/requireSession";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function POST(
@@ -10,62 +9,66 @@ export async function POST(
   const configError = supabaseConfigResponse();
   if (configError) return configError;
 
-  const auth = await requireUserSession();
-  if ("error" in auth) return auth.error;
-
   try {
-  const { id } = await params;
-  const userId = auth.session.userId;
+    const { id } = await params;
+    let userId: string | undefined;
 
-  const supabase = getSupabaseAdmin();
+    try {
+      const body = await request.json();
+      userId = body?.userId;
+    } catch {
+      // optional body
+    }
 
-  const { data: task, error: fetchError } = await supabase
-    .from("tasks")
-    .select("*")
-    .eq("id", id)
-    .single();
+    const supabase = getSupabaseAdmin();
 
-  if (fetchError || !task) {
-    return NextResponse.json({ error: "Task not found" }, { status: 404 });
-  }
+    const { data: task, error: fetchError } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-  if (task.user_id !== userId) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+    if (fetchError || !task) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    }
 
-  if (task.status !== "pending") {
-    return NextResponse.json(
-      { error: "Task is not pending" },
-      { status: 400 }
-    );
-  }
+    if (userId && task.user_id !== userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
-  if (new Date(task.deadline_at) <= new Date()) {
-    return NextResponse.json(
-      { error: "Deadline has passed" },
-      { status: 400 }
-    );
-  }
+    if (task.status !== "pending") {
+      return NextResponse.json(
+        { error: "Task is not pending" },
+        { status: 400 }
+      );
+    }
 
-  const { data: updated, error: updateError } = await supabase
-    .from("tasks")
-    .update({
-      status: "completed",
-      completed_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .eq("status", "pending")
-    .select("*")
-    .single();
+    if (new Date(task.deadline_at) <= new Date()) {
+      return NextResponse.json(
+        { error: "Deadline has passed" },
+        { status: 400 }
+      );
+    }
 
-  if (updateError || !updated) {
-    return NextResponse.json(
-      { error: updateError?.message ?? "Update failed" },
-      { status: 500 }
-    );
-  }
+    const { data: updated, error: updateError } = await supabase
+      .from("tasks")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("status", "pending")
+      .select("*")
+      .single();
 
-  return NextResponse.json({ task: updated });
+    if (updateError || !updated) {
+      return NextResponse.json(
+        { error: updateError?.message ?? "Update failed" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ task: updated });
   } catch (err) {
     return apiErrorResponse(err);
   }
