@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { apiErrorResponse, supabaseConfigResponse } from "@/lib/apiRoute";
+import { requireUserSession } from "@/lib/requireSession";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 const createSchema = z.object({
@@ -24,6 +25,12 @@ export async function GET(request: NextRequest) {
   const supabase = getSupabaseAdmin();
 
   if (userId) {
+    const auth = await requireUserSession();
+    if ("error" in auth) return auth.error;
+    if (auth.session.userId !== userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { data, error } = await supabase
       .from("tasks")
       .select("*")
@@ -87,6 +94,9 @@ export async function POST(request: NextRequest) {
   const configError = supabaseConfigResponse();
   if (configError) return configError;
 
+  const auth = await requireUserSession();
+  if ("error" in auth) return auth.error;
+
   try {
   let body: unknown;
   try {
@@ -105,34 +115,12 @@ export async function POST(request: NextRequest) {
 
   const data = parsed.data;
   const supabase = getSupabaseAdmin();
+  const userId = auth.session.userId;
 
-  let userId = data.userId;
-
-  if (userId) {
-    const { data: existing } = await supabase
-      .from("users")
-      .select("id")
-      .eq("id", userId)
-      .single();
-
-    if (!existing) userId = undefined;
-  }
-
-  if (!userId) {
-    const { data: user, error: userError } = await supabase
-      .from("users")
-      .insert({ display_name: data.displayName })
-      .select("id, display_name")
-      .single();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: userError?.message ?? "Failed to create user" },
-        { status: 500 }
-      );
-    }
-    userId = user.id;
-  }
+  await supabase
+    .from("users")
+    .update({ display_name: data.displayName.trim() })
+    .eq("id", userId);
 
   const { data: task, error: taskError } = await supabase
     .from("tasks")

@@ -1,43 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Timeline } from "./Timeline";
 import { TaskForm } from "./TaskForm";
 import { MyTasks } from "./MyTasks";
 import { ConfessionRoom } from "./ConfessionRoom";
 import { AppLogo } from "./AppLogo";
+import { useSession } from "@/lib/useSession";
 
-type Tab = "timeline" | "create" | "mine" | "confession";
+type Tab = "create" | "mine" | "confession";
 
 export function HomeApp() {
-  const [tab, setTab] = useState<Tab>("timeline");
+  const [tab, setTab] = useState<Tab>("create");
   const [taskRefresh, setTaskRefresh] = useState(0);
   const { theme, setTheme } = useTheme();
+  const router = useRouter();
+  const { user, loading, logout } = useSession();
+
+  useEffect(() => {
+    if (!loading && (!user || user.role !== "user")) {
+      router.replace("/login?next=/app");
+    }
+  }, [loading, user, router]);
+
+  if (loading) {
+    return (
+      <p className="p-8 text-center text-zinc-500">読み込み中…</p>
+    );
+  }
+
+  if (!user || user.role !== "user") {
+    return null;
+  }
 
   return (
-    <div className="app-shell flex min-h-dvh flex-col text-zinc-900 dark:text-zinc-100">
-      <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur dark:border-fail-border dark:bg-fail-bg/90">
-        <div className="flex items-center justify-between">
-          <AppLogo />
-          <button
-            type="button"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs dark:border-fail-border"
-            aria-label="テーマ切替"
-          >
-            {theme === "dark" ? "☀️" : "🌙"}
-          </button>
+    <div className="app-shell flex min-h-dvh flex-col text-zinc-100">
+      <header className="sticky top-0 z-10 border-b border-fail-border bg-fail-bg/95 px-4 py-3 backdrop-blur">
+        <div className="flex items-center justify-between gap-2">
+          <Link href="/">
+            <AppLogo size="sm" showTagline={false} />
+          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => logout()}
+              className="text-[10px] text-zinc-500 underline"
+            >
+              ログアウト
+            </button>
+            <button
+              type="button"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="rounded-lg border border-fail-border px-3 py-1.5 text-xs text-zinc-400"
+              aria-label="テーマ切替"
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="relative z-10 mx-auto w-full max-w-md flex-1 px-4 py-4 pb-24">
-        {tab === "timeline" && (
-          <section>
-            <h2 className="font-display mb-3 text-xl text-fail">失敗タイムライン</h2>
-            <Timeline />
-          </section>
-        )}
         {tab === "create" && (
           <section>
             <h2 className="font-display mb-1 text-xl text-fail">覚悟を決める</h2>
@@ -66,13 +91,8 @@ export function HomeApp() {
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-10 border-t border-zinc-200 bg-white/95 backdrop-blur dark:border-fail-border dark:bg-fail-card/95">
+      <nav className="fixed bottom-0 left-0 right-0 z-10 border-t border-fail-border bg-fail-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-md">
-          <TabButton
-            active={tab === "timeline"}
-            onClick={() => setTab("timeline")}
-            label="タイムライン"
-          />
           <TabButton
             active={tab === "create"}
             onClick={() => setTab("create")}

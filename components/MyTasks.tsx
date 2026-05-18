@@ -3,19 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { formatJstDateTime } from "@/lib/datetime";
 import { apiErrorMessage, fetchJson, parseJsonResponse } from "@/lib/fetchJson";
-import { USER_STORAGE_KEY } from "@/lib/constants";
 import type { Task } from "@/lib/types";
+import { useSession } from "@/lib/useSession";
 
 export function MyTasks({ refreshKey }: { refreshKey?: number }) {
+  const { user, loading: sessionLoading } = useSession();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hasUser, setHasUser] = useState(false);
 
   const fetchTasks = useCallback(async () => {
-    const userId = localStorage.getItem(USER_STORAGE_KEY);
-    setHasUser(!!userId);
-
-    if (!userId) {
+    if (!user?.id) {
       setTasks([]);
       setLoading(false);
       return;
@@ -24,7 +21,7 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
     setLoading(true);
     try {
       const { res, data } = await fetchJson<{ tasks?: Task[] }>(
-        `/api/tasks?userId=${userId}`
+        `/api/tasks?userId=${user.id}`
       );
       if (!res.ok) throw new Error(apiErrorMessage(data, "読み込みに失敗しました"));
       setTasks(data.tasks ?? []);
@@ -33,18 +30,15 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks, refreshKey]);
+    if (!sessionLoading) fetchTasks();
+  }, [fetchTasks, refreshKey, sessionLoading]);
 
   const completeTask = async (taskId: string) => {
-    const userId = localStorage.getItem(USER_STORAGE_KEY);
     const res = await fetch(`/api/tasks/${taskId}/complete`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
     });
     if (res.ok) {
       fetchTasks();
@@ -56,14 +50,6 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
 
   if (loading) {
     return <p className="text-empty-hint py-8">読み込み中…</p>;
-  }
-
-  if (!hasUser) {
-    return (
-      <p className="text-empty-hint py-12">
-        タスクを1つ作成すると、ここに表示されます。
-      </p>
-    );
   }
 
   if (tasks.length === 0) {

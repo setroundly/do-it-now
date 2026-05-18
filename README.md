@@ -21,10 +21,23 @@ npm run dev
 
 ブラウザで http://localhost:3000 を開く。
 
-### Cron の手動実行（締切超過 → failed）
+### Cron（締切超過 → failed）
+
+**Vercel Hobby（無料）** は Cron が **1日1回まで** のため、`vercel.json` は毎日 **0:00 JST**（UTC 15:00）に1回実行します。
+
+5分おきに失敗判定したい場合:
+
+- **Vercel Pro** にする、または
+- [cron-job.org](https://cron-job.org) などの外部 Cron から、5分ごとに次を叩く:
 
 ```bash
-curl -H "Authorization: Bearer YOUR_CRON_SECRET" http://localhost:3000/api/cron/check-failures
+curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://あなたの本番URL/api/cron/check-failures
+```
+
+手動実行（ローカル / 本番どちらでも可）:
+
+```bash
+curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://あなたの本番URL/api/cron/check-failures
 ```
 
 ## Supabase 設定
@@ -42,7 +55,7 @@ curl -H "Authorization: Bearer YOUR_CRON_SECRET" http://localhost:3000/api/cron/
 3. Environment Variables に `.env.example` の値を設定（本番 URL は `NEXT_PUBLIC_APP_URL` に反映）
 4. Deploy
 
-Cron は `vercel.json` で 5 分ごとに `/api/cron/check-failures` を実行します。
+Cron は `vercel.json` で 1 日 1 回 `/api/cron/check-failures` を実行します（Hobby プラン制限）。詳細は上記「Cron」参照。
 
 ## フォルダ構成
 

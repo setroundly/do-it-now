@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiErrorMessage, fetchJson } from "@/lib/fetchJson";
-import {
-  USER_STORAGE_KEY,
-  USER_NAME_STORAGE_KEY,
-} from "@/lib/constants";
+import { USER_NAME_STORAGE_KEY } from "@/lib/constants";
+import { useSession } from "@/lib/useSession";
 import { datetimeLocalJstToUtcIso, defaultDeadlineJstParts } from "@/lib/datetime";
 import type { DonationDestinationId } from "@/lib/donationDestinations";
 import type { Task } from "@/lib/types";
@@ -23,10 +21,8 @@ const defaultDeadline = (() => {
 })();
 
 export function TaskForm({ onCreated }: TaskFormProps) {
-  const [displayName, setDisplayName] = useState(() => {
-    if (typeof window === "undefined") return "";
-    return localStorage.getItem(USER_NAME_STORAGE_KEY) ?? "";
-  });
+  const { user } = useSession();
+  const [displayName, setDisplayName] = useState("");
   const [title, setTitle] = useState("");
   const [deadlineAt, setDeadlineAt] = useState(defaultDeadline);
   const [penaltyAmount, setPenaltyAmount] = useState("1000");
@@ -40,6 +36,12 @@ export function TaskForm({ onCreated }: TaskFormProps) {
   const [notifyEmail, setNotifyEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user?.displayName) {
+      setDisplayName(user.displayName);
+    }
+  }, [user?.displayName]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,11 +72,6 @@ export function TaskForm({ onCreated }: TaskFormProps) {
 
     setSubmitting(true);
 
-    const userId =
-      typeof window !== "undefined"
-        ? localStorage.getItem(USER_STORAGE_KEY) ?? undefined
-        : undefined;
-
     let deadlineIso: string;
     try {
       deadlineIso = datetimeLocalJstToUtcIso(deadlineAt);
@@ -93,8 +90,7 @@ export function TaskForm({ onCreated }: TaskFormProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId,
-          displayName: displayName.trim(),
+          displayName: (user?.displayName ?? displayName).trim(),
           title: title.trim(),
           deadlineAt: deadlineIso,
           penaltyAmount: Number(penaltyAmount),
@@ -112,9 +108,6 @@ export function TaskForm({ onCreated }: TaskFormProps) {
       if (!data.user || !data.task) {
         throw new Error("作成に失敗しました");
       }
-
-      localStorage.setItem(USER_STORAGE_KEY, data.user.id);
-      localStorage.setItem(USER_NAME_STORAGE_KEY, data.user.display_name);
 
       setTitle("");
       setDeadlineAt(defaultDeadline);
@@ -141,16 +134,18 @@ export function TaskForm({ onCreated }: TaskFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <Field label="あなたの名前" required>
-        <input
-          className="input"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="名前"
-          required
-          maxLength={32}
-        />
-      </Field>
+      {!user && (
+        <Field label="あなたの名前" required>
+          <input
+            className="input"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="名前"
+            required
+            maxLength={32}
+          />
+        </Field>
+      )}
 
       <Field
         label="公開タスク"

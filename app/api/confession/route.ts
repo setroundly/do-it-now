@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { apiErrorResponse, supabaseConfigResponse } from "@/lib/apiRoute";
+import { requireUserSession } from "@/lib/requireSession";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 const postSchema = z.object({
@@ -61,6 +62,9 @@ export async function POST(request: NextRequest) {
   const configError = supabaseConfigResponse();
   if (configError) return configError;
 
+  const auth = await requireUserSession();
+  if ("error" in auth) return auth.error;
+
   let body: unknown;
   try {
     body = await request.json();
@@ -102,8 +106,8 @@ export async function POST(request: NextRequest) {
     const { data: post, error } = await supabase
       .from("confession_posts")
       .insert({
-        user_id: data.userId ?? null,
-        display_name: data.displayName.trim(),
+        user_id: auth.session.userId,
+        display_name: auth.session.displayName,
         body: data.body.trim(),
         parent_id: data.parentId ?? null,
       })

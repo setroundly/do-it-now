@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse, supabaseConfigResponse } from "@/lib/apiRoute";
+import { requireUserSession } from "@/lib/requireSession";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function POST(
@@ -9,16 +10,12 @@ export async function POST(
   const configError = supabaseConfigResponse();
   if (configError) return configError;
 
-  try {
-  const { id } = await params;
-  let userId: string | undefined;
+  const auth = await requireUserSession();
+  if ("error" in auth) return auth.error;
 
   try {
-    const body = await request.json();
-    userId = body?.userId;
-  } catch {
-    // optional body
-  }
+  const { id } = await params;
+  const userId = auth.session.userId;
 
   const supabase = getSupabaseAdmin();
 
@@ -32,7 +29,7 @@ export async function POST(
     return NextResponse.json({ error: "Task not found" }, { status: 404 });
   }
 
-  if (userId && task.user_id !== userId) {
+  if (task.user_id !== userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
