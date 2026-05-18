@@ -1,9 +1,7 @@
 "use client";
 
 import { FailureCard } from "./FailureCard";
-import { FailurePostForm } from "./FailurePostForm";
 import { useFailuresTimeline } from "@/lib/useFailuresTimeline";
-import type { Failure } from "@/lib/types";
 
 function TimelineSkeleton() {
   return (
@@ -20,18 +18,12 @@ function TimelineSkeleton() {
 }
 
 export function Timeline() {
-  const { failures, loading, error, newIds, refresh, prependFailure } =
-    useFailuresTimeline();
-
-  const handlePosted = (failure: Failure) => {
-    prependFailure(failure);
-  };
+  const { failures, loading, error, newIds, refresh } = useFailuresTimeline();
 
   if (loading) {
     return (
       <div className="flex flex-col">
-        <FailurePostForm onPosted={handlePosted} />
-        <p className="text-empty-hint mb-4">タイムラインを読み込み中…</p>
+        <p className="text-empty-hint mb-4">みんなの失敗を読み込み中…</p>
         <TimelineSkeleton />
       </div>
     );
@@ -39,15 +31,13 @@ export function Timeline() {
 
   return (
     <div className="flex flex-col">
-      <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="mb-4 flex items-center justify-between gap-2">
         <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-400/90">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
           Live
         </span>
-        <span className="text-[10px] text-zinc-600">投稿は即時反映</span>
+        <span className="text-[10px] text-zinc-600">締切を過ぎた失敗が流れます</span>
       </div>
-
-      <FailurePostForm onPosted={handlePosted} />
 
       {error && (
         <div className="mb-4 rounded-xl border border-red-900/50 bg-red-950/30 p-4 text-sm text-red-300">
@@ -66,9 +56,7 @@ export function Timeline() {
         <div className="rounded-2xl border border-dashed border-fail-border/60 bg-fail-card/40 px-6 py-12 text-center">
           <p className="font-display text-lg text-zinc-300">まだ失敗がありません</p>
           <p className="text-empty-hint mt-2">
-            上のフォームから最初の失敗を投稿するか、
-            <br />
-            誰かのタスクが締切を過ぎるのを待ちましょう。
+            タスクの締切を過ぎると、ここに自動で流れてきます。
           </p>
         </div>
       )}

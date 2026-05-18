@@ -23,7 +23,7 @@ npm run dev
 
 ### リアルタイムタイムライン
 
-- 失敗投稿は `failures` テーブルへ保存し、**Supabase Realtime** で即時反映
+- 締切超過した失敗は `failures` テーブルへ保存し、**Supabase Realtime** で即時反映
 - 締切超過タスクの失敗化は、アプリ表示時に `/api/tasks/fail-overdue` を自動実行（Vercel Cron 不要）
 - Supabase SQL Editor で `supabase/failures.sql` を実行し、**Replication** で `failures` を有効化
 
