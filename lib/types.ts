@@ -77,8 +77,8 @@ export interface CreateTaskPayload {
   penaltyAmount: number;
   donationDestination: string;
   donateUrl?: string;
-  notifyName: string;
-  notifyEmail: string;
+  notifyName?: string;
+  notifyEmail?: string;
 }
 
 export interface TaskWithMeta extends Task {

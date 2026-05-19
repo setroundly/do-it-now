@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { formatJstDateTime } from "@/lib/datetime";
 import { apiErrorMessage, fetchJson, parseJsonResponse } from "@/lib/fetchJson";
 import { USER_STORAGE_KEY } from "@/lib/constants";
+import { resolveTaskDonateUrl } from "@/lib/resolveDonateUrl";
 import type { Task } from "@/lib/types";
 
 export function MyTasks({ refreshKey }: { refreshKey?: number }) {
@@ -84,13 +85,15 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
     failed: "text-fail",
   };
 
-  return (
-    <ul className="flex flex-col gap-3">
-      {tasks.map((task) => (
-        <li
-          key={task.id}
-          className="rounded-xl border border-fail-border bg-fail-card p-4"
-        >
+  const failedTasks = tasks.filter((t) => t.status === "failed");
+  const otherTasks = tasks.filter((t) => t.status !== "failed");
+
+  const renderTask = (task: Task) => {
+    const donateUrl =
+      task.status === "failed" ? resolveTaskDonateUrl(task) : null;
+
+    return (
+        <div className="rounded-xl border border-fail-border bg-fail-card p-4">
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-display text-lg font-normal leading-snug text-zinc-100">
               {task.title}
@@ -106,6 +109,22 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
             {" · "}
             {task.penalty_amount.toLocaleString()}円 → {task.donation_destination}
           </p>
+          {task.status === "failed" && donateUrl && (
+            <a
+              href={donateUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-fail/40 bg-fail/10 py-2.5 text-sm font-bold text-fail transition hover:bg-fail/20"
+            >
+              {task.donation_destination}へ寄付する
+              <span aria-hidden>↗</span>
+            </a>
+          )}
+          {task.status === "failed" && !donateUrl && (
+            <p className="mt-2 text-xs text-zinc-500">
+              寄付ページのURLが未設定です（作成時に「その他」でURLを指定してください）
+            </p>
+          )}
           {task.status === "pending" && (
             <button
               type="button"
@@ -115,8 +134,38 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
               完了した（逃げ切る）
             </button>
           )}
-        </li>
-      ))}
-    </ul>
+        </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      {failedTasks.length > 0 && (
+        <section>
+          <h3 className="mb-2 text-sm font-semibold text-fail">
+            失敗したタスク
+          </h3>
+          <ul className="flex flex-col gap-3">
+            {failedTasks.map((task) => (
+              <li key={task.id}>{renderTask(task)}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {otherTasks.length > 0 && (
+        <section>
+          {failedTasks.length > 0 && (
+            <h3 className="mb-2 text-sm font-semibold text-zinc-500">
+              その他のタスク
+            </h3>
+          )}
+          <ul className="flex flex-col gap-3">
+            {otherTasks.map((task) => (
+              <li key={task.id}>{renderTask(task)}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
   );
 }

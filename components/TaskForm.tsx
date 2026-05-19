@@ -100,8 +100,12 @@ export function TaskForm({ onCreated }: TaskFormProps) {
           penaltyAmount: Number(penaltyAmount),
           donationDestination: finalName,
           donateUrl: finalUrl || undefined,
-          notifyName: notifyName.trim(),
-          notifyEmail: notifyEmail.trim(),
+          ...(notifyEmail.trim()
+            ? {
+                notifyName: notifyName.trim() || undefined,
+                notifyEmail: notifyEmail.trim(),
+              }
+            : {}),
         }),
       });
 
@@ -201,20 +205,23 @@ export function TaskForm({ onCreated }: TaskFormProps) {
       />
 
       <div className="rounded-2xl border border-fail-border/60 bg-zinc-950/40 p-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
           見届け人
         </p>
+        <p className="mb-3 text-xs text-zinc-600">
+          任意。メールを入れた場合だけ、失敗時に通知します。
+        </p>
         <div className="flex flex-col gap-4">
-          <Field label="名前" required>
+          <Field label="名前">
             <input
               className="input"
               value={notifyName}
               onChange={(e) => setNotifyName(e.target.value)}
-              placeholder="上司"
-              required
+              placeholder="上司（任意）"
+              maxLength={64}
             />
           </Field>
-          <Field label="メール" required>
+          <Field label="メール">
             <input
               type="email"
               inputMode="email"
@@ -222,8 +229,7 @@ export function TaskForm({ onCreated }: TaskFormProps) {
               className="input"
               value={notifyEmail}
               onChange={(e) => setNotifyEmail(e.target.value)}
-              placeholder="friend@example.com"
-              required
+              placeholder="friend@example.com（任意）"
             />
           </Field>
         </div>

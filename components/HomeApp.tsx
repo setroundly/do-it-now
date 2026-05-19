@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useFailOverdue } from "@/lib/useFailOverdue";
 import { useTheme } from "next-themes";
 import { Timeline } from "./Timeline";
 import { TaskForm } from "./TaskForm";
@@ -14,6 +15,11 @@ export function HomeApp() {
   const [tab, setTab] = useState<Tab>("timeline");
   const [taskRefresh, setTaskRefresh] = useState(0);
   const { theme, setTheme } = useTheme();
+
+  const bumpTaskRefresh = useCallback(() => {
+    setTaskRefresh((k) => k + 1);
+  }, []);
+  useFailOverdue(bumpTaskRefresh);
 
   return (
     <div className="app-shell flex min-h-screen flex-col text-zinc-100">

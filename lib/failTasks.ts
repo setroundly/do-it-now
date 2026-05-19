@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "./supabaseAdmin";
+import { resolveTaskDonateUrl } from "./resolveDonateUrl";
 import { sendFailureEmail } from "./resend";
 
 export async function processOverdueFailures() {
@@ -18,7 +19,9 @@ export async function processOverdueFailures() {
   for (const taskId of taskIds) {
     const { data: task, error: taskError } = await supabase
       .from("tasks")
-      .select("id, title, penalty_amount, user_id")
+      .select(
+        "id, title, penalty_amount, user_id, donation_destination, donate_url"
+      )
       .eq("id", taskId)
       .single();
 
@@ -41,14 +44,25 @@ export async function processOverdueFailures() {
 
     let emailsSent = 0;
 
+    const donateUrl = resolveTaskDonateUrl(task);
+
     for (const target of targets ?? []) {
       try {
-        await sendFailureEmail({
+        const result = await sendFailureEmail({
           to: target.destination,
           displayName,
           taskTitle: task.title,
           penaltyAmount: task.penalty_amount,
+          donationDestination: task.donation_destination,
+          donateUrl,
         });
+
+        if (result.skipped) {
+          console.error(
+            `[failTasks] email skipped for ${target.id}: set RESEND_API_KEY and EMAIL_FROM`
+          );
+          continue;
+        }
 
         await supabase
           .from("notification_targets")
