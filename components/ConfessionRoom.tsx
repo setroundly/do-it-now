@@ -7,7 +7,12 @@ import {
   USER_NAME_STORAGE_KEY,
   USER_STORAGE_KEY,
 } from "@/lib/constants";
+import { removeConfessionPostFromThreads } from "@/lib/confession";
 import { getConfessionClientKey } from "@/lib/confessionClient";
+import {
+  getSupabaseBrowser,
+  isSupabaseBrowserConfigured,
+} from "@/lib/supabaseBrowser";
 import type { ConfessionPost } from "@/lib/types";
 
 const COMFORTED_KEY = "fail_donate_comforted_posts";
@@ -60,9 +65,38 @@ export function ConfessionRoom() {
 
   useEffect(() => {
     setDisplayName(localStorage.getItem(USER_NAME_STORAGE_KEY) ?? "");
-    fetchThreads();
+    void fetchThreads();
+
     const interval = setInterval(fetchThreads, 20_000);
-    return () => clearInterval(interval);
+
+    const supabase = getSupabaseBrowser();
+    let channel: ReturnType<NonNullable<typeof supabase>["channel"]> | null =
+      null;
+
+    if (supabase && isSupabaseBrowserConfigured()) {
+      channel = supabase
+        .channel("confession-room-live")
+        .on(
+          "postgres_changes",
+          { event: "DELETE", schema: "public", table: "confession_posts" },
+          (payload) => {
+            const oldRow = payload.old as { id?: string };
+            if (oldRow.id) {
+              setThreads((prev) =>
+                removeConfessionPostFromThreads(prev, oldRow.id!)
+              );
+            }
+          }
+        )
+        .subscribe();
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (supabase && channel) {
+        void supabase.removeChannel(channel);
+      }
+    };
   }, [fetchThreads]);
 
   const submitPost = async (body: string, parentId?: string) => {
