@@ -3,9 +3,6 @@
 import { formatJstDateTimeLong, formatJstRelative } from "@/lib/datetime";
 import { failureDonationLine, failureHeadline } from "@/lib/failures";
 import type { Failure } from "@/lib/types";
-import { SupportButtons } from "./SupportButtons";
-import { APP_NAME } from "@/lib/branding";
-import { getAppBaseUrl } from "@/lib/constants";
 
 interface FailureCardProps {
   failure: Failure;
@@ -13,31 +10,6 @@ interface FailureCardProps {
 }
 
 export function FailureCard({ failure, isNew }: FailureCardProps) {
-  const imageUrl = failure.task_id
-    ? `${getAppBaseUrl()}/api/image-card/${failure.task_id}`
-    : null;
-
-  const handleShare = async () => {
-    const shareText = `${failureHeadline(failure)} — ${failure.description}`;
-    const shareData = {
-      title: APP_NAME,
-      text: shareText,
-      url: imageUrl ?? window.location.href,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        return;
-      } catch {
-        // fall through
-      }
-    }
-
-    await navigator.clipboard.writeText(shareText);
-    alert("失敗文をコピーしました");
-  };
-
   return (
     <article
       className={`rounded-2xl border bg-fail-card p-4 shadow-lg transition-colors ${
@@ -70,52 +42,19 @@ export function FailureCard({ failure, isNew }: FailureCardProps) {
         💸 {failureDonationLine(failure)}
       </p>
 
-      <p className="mb-3 text-xs text-zinc-500">
-        <time dateTime={failure.created_at} className="tabular-nums" title={formatJstDateTimeLong(failure.created_at)}>
+      <p className="text-xs text-zinc-500">
+        <time
+          dateTime={failure.created_at}
+          className="tabular-nums"
+          title={formatJstDateTimeLong(failure.created_at)}
+        >
           {formatJstRelative(failure.created_at)}
         </time>
         <span className="mx-1 text-zinc-700">·</span>
-        <span className="text-zinc-600">{formatJstDateTimeLong(failure.created_at)} JST</span>
+        <span className="text-zinc-600">
+          {formatJstDateTimeLong(failure.created_at)} JST
+        </span>
       </p>
-
-      {(failure.donation_destination || failure.donate_url) && (
-        <SupportButtons
-          donateUrl={failure.donate_url}
-          donationDestination={failure.donation_destination ?? undefined}
-        />
-      )}
-
-      {imageUrl && (
-        <CardActions imageUrl={imageUrl} onShare={handleShare} />
-      )}
     </article>
-  );
-}
-
-function CardActions({
-  imageUrl,
-  onShare,
-}: {
-  imageUrl: string;
-  onShare: () => void;
-}) {
-  return (
-    <div className="mt-3 flex gap-2">
-      <a
-        href={imageUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex-1 rounded-xl border border-fail-border py-2.5 text-center text-xs font-medium text-zinc-300 hover:text-white"
-      >
-        失敗カード画像
-      </a>
-      <button
-        type="button"
-        onClick={onShare}
-        className="flex-1 rounded-xl border border-fail-border py-2.5 text-center text-xs font-medium text-zinc-300 hover:text-white"
-      >
-        シェア
-      </button>
-    </div>
   );
 }
