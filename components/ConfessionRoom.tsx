@@ -99,10 +99,10 @@ export function ConfessionRoom() {
           "postgres_changes",
           { event: "DELETE", schema: "public", table: "confession_posts" },
           (payload) => {
-            const oldRow = payload.old as { id?: string };
-            if (oldRow?.id) {
+            const deletedId = (payload.old as { id?: string }).id;
+            if (deletedId) {
               setThreads((prev) =>
-                removeConfessionPostFromThreads(prev, oldRow.id)
+                removeConfessionPostFromThreads(prev, deletedId)
               );
             } else {
               void fetchThreads({ silent: true });

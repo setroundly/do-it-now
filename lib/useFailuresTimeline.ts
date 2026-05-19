@@ -131,9 +131,9 @@ export function useFailuresTimeline() {
           "postgres_changes",
           { event: "DELETE", schema: "public", table: "failures" },
           (payload) => {
-            const oldRow = payload.old as { id?: string };
-            if (oldRow?.id) {
-              setFailures((prev) => removeFailureById(prev, oldRow.id));
+            const deletedId = (payload.old as { id?: string }).id;
+            if (deletedId) {
+              setFailures((prev) => removeFailureById(prev, deletedId));
             } else {
               void fetchFailures({ silent: true });
             }
