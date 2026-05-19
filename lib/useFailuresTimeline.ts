@@ -14,6 +14,8 @@ import {
 } from "@/lib/supabaseBrowser";
 import type { Failure } from "@/lib/types";
 
+/** Realtime 未設定時のフォールバック（静かに再取得） */
+const POLL_INTERVAL_MS = 15_000;
 const CLIENT_FAIL_INTERVAL_MS = 60_000;
 
 async function processOverdueClient() {
@@ -99,6 +101,19 @@ export function useFailuresTimeline() {
     let channel: ReturnType<NonNullable<typeof supabase>["channel"]> | null =
       null;
 
+    const pollTimer = window.setInterval(
+      () => void fetchFailures({ silent: true }),
+      POLL_INTERVAL_MS
+    );
+
+    const onFocus = () => void fetchFailures({ silent: true });
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        void fetchFailures({ silent: true });
+      }
+    });
+
     if (supabase && isSupabaseBrowserConfigured()) {
       channel = supabase
         .channel("failures-timeline-live")
@@ -117,8 +132,10 @@ export function useFailuresTimeline() {
           { event: "DELETE", schema: "public", table: "failures" },
           (payload) => {
             const oldRow = payload.old as { id?: string };
-            if (oldRow.id) {
-              setFailures((prev) => removeFailureById(prev, oldRow.id!));
+            if (oldRow?.id) {
+              setFailures((prev) => removeFailureById(prev, oldRow.id));
+            } else {
+              void fetchFailures({ silent: true });
             }
           }
         )
@@ -128,6 +145,8 @@ export function useFailuresTimeline() {
     return () => {
       mountedRef.current = false;
       window.clearInterval(overdueTimer);
+      window.clearInterval(pollTimer);
+      window.removeEventListener("focus", onFocus);
       if (supabase && channel) {
         void supabase.removeChannel(channel);
       }

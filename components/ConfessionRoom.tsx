@@ -16,6 +16,7 @@ import {
 import type { ConfessionPost } from "@/lib/types";
 
 const COMFORTED_KEY = "fail_donate_comforted_posts";
+const POLL_INTERVAL_MS = 10_000;
 
 function getComfortedSet(): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -46,9 +47,11 @@ export function ConfessionRoom() {
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyBody, setReplyBody] = useState("");
 
-  const fetchThreads = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchThreads = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) {
+      setLoading(true);
+      setError(null);
+    }
     try {
       const { res, data } = await fetchJson<{ threads?: ConfessionPost[] }>(
         "/api/confession"
@@ -57,9 +60,13 @@ export function ConfessionRoom() {
       setThreads(data.threads ?? []);
       setComforted(getComfortedSet());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "エラー");
+      if (!opts?.silent) {
+        setError(e instanceof Error ? e.message : "エラー");
+      }
     } finally {
-      setLoading(false);
+      if (!opts?.silent) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -67,7 +74,19 @@ export function ConfessionRoom() {
     setDisplayName(localStorage.getItem(USER_NAME_STORAGE_KEY) ?? "");
     void fetchThreads();
 
-    const interval = setInterval(fetchThreads, 20_000);
+    const interval = setInterval(
+      () => void fetchThreads({ silent: true }),
+      POLL_INTERVAL_MS
+    );
+
+    const onFocus = () => void fetchThreads({ silent: true });
+    window.addEventListener("focus", onFocus);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void fetchThreads({ silent: true });
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
 
     const supabase = getSupabaseBrowser();
     let channel: ReturnType<NonNullable<typeof supabase>["channel"]> | null =
@@ -81,10 +100,12 @@ export function ConfessionRoom() {
           { event: "DELETE", schema: "public", table: "confession_posts" },
           (payload) => {
             const oldRow = payload.old as { id?: string };
-            if (oldRow.id) {
+            if (oldRow?.id) {
               setThreads((prev) =>
-                removeConfessionPostFromThreads(prev, oldRow.id!)
+                removeConfessionPostFromThreads(prev, oldRow.id)
               );
+            } else {
+              void fetchThreads({ silent: true });
             }
           }
         )
@@ -93,6 +114,8 @@ export function ConfessionRoom() {
 
     return () => {
       clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
       if (supabase && channel) {
         void supabase.removeChannel(channel);
       }
