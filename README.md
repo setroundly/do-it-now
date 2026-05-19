@@ -27,6 +27,12 @@ npm run dev
 - 締切超過タスクの失敗化は、アプリ表示時に `/api/tasks/fail-overdue` を自動実行（Vercel Cron 不要）
 - Supabase SQL Editor で `supabase/failures.sql` を実行し、**Replication** で `failures` を有効化
 
+### 管理者（投稿削除）
+
+- `/admin` に `ADMIN_SECRET` を入力してログイン
+- 投稿一覧から削除（一般ユーザーのタイムラインには削除ボタンなし）
+- 削除は Realtime でタイムラインから即時消える
+
 ## Supabase 設定
 
 1. [supabase.com](https://supabase.com) でプロジェクト作成

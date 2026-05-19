@@ -5,6 +5,7 @@ import { apiErrorMessage, fetchJson } from "@/lib/fetchJson";
 import {
   mapRowToFailure,
   mergeFailure,
+  removeFailureById,
   sortFailuresNewest,
 } from "@/lib/failures";
 import {
@@ -109,6 +110,16 @@ export function useFailuresTimeline() {
             const failure = mapRowToFailure(row);
             setFailures((prev) => mergeFailure(prev, failure));
             markNew(failure.id);
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "DELETE", schema: "public", table: "failures" },
+          (payload) => {
+            const oldRow = payload.old as { id?: string };
+            if (oldRow.id) {
+              setFailures((prev) => removeFailureById(prev, oldRow.id!));
+            }
           }
         )
         .subscribe();

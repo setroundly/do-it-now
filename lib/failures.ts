@@ -46,3 +46,10 @@ export function mergeFailure(
   if (current.some((f) => f.id === incoming.id)) return current;
   return sortFailuresNewest([incoming, ...current]);
 }
+
+export function removeFailureById(
+  current: Failure[],
+  id: string
+): Failure[] {
+  return current.filter((f) => f.id !== id);
+}
