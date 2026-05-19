@@ -1,6 +1,12 @@
+import { getEmailConfigStatus } from "./emailConfig";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 import { resolveTaskDonateUrl } from "./resolveDonateUrl";
 import { sendFailureEmail } from "./resend";
+
+export type EmailAttemptResult =
+  | { status: "sent"; messageId?: string }
+  | { status: "skipped"; reason: string }
+  | { status: "error"; message: string };
 
 export async function processOverdueFailures() {
   const supabase = getSupabaseAdmin();
@@ -14,7 +20,12 @@ export async function processOverdueFailures() {
   }
 
   const taskIds = (failedIds ?? []) as string[];
-  const results: { taskId: string; emailsSent: number }[] = [];
+  const emailConfig = getEmailConfigStatus();
+  const results: {
+    taskId: string;
+    emailsSent: number;
+    attempts: EmailAttemptResult[];
+  }[] = [];
 
   for (const taskId of taskIds) {
     const { data: task, error: taskError } = await supabase
@@ -43,8 +54,14 @@ export async function processOverdueFailures() {
       .is("notified_at", null);
 
     let emailsSent = 0;
+    const attempts: EmailAttemptResult[] = [];
 
     const donateUrl = resolveTaskDonateUrl(task);
+
+    if ((targets ?? []).length === 0) {
+      results.push({ taskId, emailsSent: 0, attempts: [] });
+      continue;
+    }
 
     for (const target of targets ?? []) {
       try {
@@ -58,9 +75,13 @@ export async function processOverdueFailures() {
         });
 
         if (result.skipped) {
-          console.error(
-            `[failTasks] email skipped for ${target.id}: set RESEND_API_KEY and EMAIL_FROM`
-          );
+          const reason = !emailConfig.hasApiKey
+            ? "RESEND_API_KEY 未設定"
+            : !emailConfig.hasFrom
+              ? "EMAIL_FROM 未設定"
+              : "メール設定が無効";
+          console.error(`[failTasks] email skipped for ${target.id}: ${reason}`);
+          attempts.push({ status: "skipped", reason });
           continue;
         }
 
@@ -70,13 +91,16 @@ export async function processOverdueFailures() {
           .eq("id", target.id);
 
         emailsSent += 1;
+        attempts.push({ status: "sent", messageId: result.id });
       } catch (err) {
+        const message = err instanceof Error ? err.message : "送信エラー";
         console.error(`[failTasks] email failed for ${target.id}:`, err);
+        attempts.push({ status: "error", message });
       }
     }
 
-    results.push({ taskId, emailsSent });
+    results.push({ taskId, emailsSent, attempts });
   }
 
-  return { processed: taskIds.length, results };
+  return { processed: taskIds.length, emailConfig, results };
 }

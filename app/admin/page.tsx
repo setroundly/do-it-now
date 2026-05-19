@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { AdminEmailDiagnostics } from "@/components/AdminEmailDiagnostics";
 import { AppLogo } from "@/components/AppLogo";
 import { formatJstDateTimeLong, formatJstTime } from "@/lib/datetime";
 import { flattenConfessionThreads } from "@/lib/confession";
@@ -223,6 +224,8 @@ export default function AdminPage() {
             <p className="mb-4 text-sm text-zinc-500">
               投稿の削除はここからのみ可能です（一般ユーザーには表示されません）
             </p>
+
+            <AdminEmailDiagnostics />
 
             <div className="mb-4 flex rounded-xl border border-fail-border bg-fail-card/50 p-1">
               <TabButton
