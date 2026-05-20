@@ -11,6 +11,7 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasUser, setHasUser] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchTasks = useCallback(async () => {
     const userId = localStorage.getItem(USER_STORAGE_KEY);
@@ -39,6 +40,45 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks, refreshKey]);
+
+  const deleteTask = async (task: Task) => {
+    const userId = localStorage.getItem(USER_STORAGE_KEY);
+    if (!userId) return;
+
+    const timelineNote =
+      task.status === "failed"
+        ? "\n\n※ タイムラインに載っている失敗投稿も一緒に消えます。"
+        : "";
+
+    const message = [
+      `「${task.title}」を削除しますか？`,
+      timelineNote,
+      "",
+      "この操作は取り消せません。",
+    ]
+      .filter((line, i, arr) => line !== "" || (i > 0 && arr[i - 1] !== ""))
+      .join("\n");
+
+    if (!window.confirm(message)) return;
+
+    setDeletingId(task.id);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await parseJsonResponse<{ error?: string }>(res);
+      if (!res.ok) {
+        throw new Error(apiErrorMessage(data, "削除に失敗しました"));
+      }
+      setTasks((prev) => prev.filter((t) => t.id !== task.id));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "削除に失敗しました");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const completeTask = async (taskId: string) => {
     const userId = localStorage.getItem(USER_STORAGE_KEY);
@@ -95,12 +135,22 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
     return (
         <div className="rounded-xl border border-fail-border bg-fail-card p-4">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-display text-lg font-normal leading-snug text-zinc-100">
+            <h3 className="font-display min-w-0 flex-1 text-lg font-normal leading-snug text-zinc-100">
               {task.title}
             </h3>
-            <span className={`text-xs font-bold ${statusColor[task.status]}`}>
-              {statusLabel[task.status]}
-            </span>
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
+              <span className={`text-xs font-bold ${statusColor[task.status]}`}>
+                {statusLabel[task.status]}
+              </span>
+              <button
+                type="button"
+                onClick={() => void deleteTask(task)}
+                disabled={deletingId === task.id}
+                className="text-[11px] text-zinc-500 underline decoration-zinc-600 underline-offset-2 hover:text-fail disabled:opacity-50"
+              >
+                {deletingId === task.id ? "削除中…" : "削除"}
+              </button>
+            </div>
           </div>
           <p className="mt-1 text-xs text-zinc-500">
             <span className="tabular-nums">
