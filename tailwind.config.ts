@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -10,19 +9,19 @@ const config: Config = {
     extend: {
       colors: {
         fail: {
-          DEFAULT: "#ff4d4d",
-          muted: "#ff6b35",
-          bg: "#0a0a0a",
-          card: "#141414",
-          border: "#2a2a2a",
+          DEFAULT: "#dc2626",
+          muted: "#b91c1c",
+          soft: "#fef2f2",
+          bg: "#ffffff",
+          card: "#ffffff",
+          border: "#e5e5e5",
         },
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "monospace"],
-        rock: ['var(--font-rock)', '"RocknRoll One"', "sans-serif"],
-        jagged: ['var(--font-jagged)', '"Slackside One"', "sans-serif"],
-        display: ['var(--font-jagged)', '"Slackside One"', '"RocknRoll One"', "sans-serif"],
+        sans: ["var(--font-sans)", "Hiragino Sans", "Yu Gothic", "sans-serif"],
+      },
+      boxShadow: {
+        card: "0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)",
       },
     },
   },

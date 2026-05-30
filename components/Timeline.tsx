@@ -9,7 +9,7 @@ function TimelineSkeleton() {
       {[0, 1, 2].map((i) => (
         <div
           key={i}
-          className="h-28 animate-pulse rounded-2xl border border-fail-border/40 bg-fail-card/50"
+          className="h-28 animate-pulse rounded-xl border border-zinc-100 bg-zinc-50"
           style={{ animationDelay: `${i * 120}ms` }}
         />
       ))}
@@ -32,20 +32,20 @@ export function Timeline() {
   return (
     <div className="flex flex-col">
       <div className="mb-4 flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-400/90">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
           Live
         </span>
-        <span className="text-[10px] text-zinc-600">締切を過ぎた失敗が流れます</span>
+        <span className="text-[10px] text-zinc-400">締切を過ぎた失敗が流れます</span>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-xl border border-red-900/50 bg-red-950/30 p-4 text-sm text-red-300">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {error}
           <button
             type="button"
             onClick={() => void refresh()}
-            className="mt-2 block text-fail underline"
+            className="mt-2 block font-medium text-fail underline"
           >
             再試行
           </button>
@@ -53,8 +53,10 @@ export function Timeline() {
       )}
 
       {!error && failures.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-fail-border/60 bg-fail-card/40 px-6 py-12 text-center">
-          <p className="font-display text-lg text-zinc-300">まだ失敗がありません</p>
+        <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-6 py-12 text-center">
+          <p className="font-display text-base text-zinc-600">
+            まだ失敗がありません
+          </p>
           <p className="text-empty-hint mt-2">
             タスクの締切を過ぎると、ここに自動で流れてきます。
           </p>
@@ -62,7 +64,7 @@ export function Timeline() {
       )}
 
       {failures.length > 0 && (
-        <ul className="flex flex-col gap-4">
+        <ul className="flex flex-col gap-3">
           {failures.map((failure) => (
             <li key={failure.id}>
               <FailureCard failure={failure} isNew={newIds.has(failure.id)} />

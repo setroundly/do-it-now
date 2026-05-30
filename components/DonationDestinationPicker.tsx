@@ -48,8 +48,8 @@ export function DonationDestinationPicker({
                     "group relative flex w-[132px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border p-3 text-left transition duration-200",
                     "active:scale-[0.98]",
                     active
-                      ? "border-fail bg-gradient-to-b from-fail/25 to-fail-card shadow-[0_0_24px_rgba(255,77,77,0.35)] ring-1 ring-fail/60"
-                      : "border-fail-border/70 bg-fail-card/90 hover:border-zinc-500 hover:shadow-lg",
+                      ? "border-fail bg-fail-soft shadow-sm ring-1 ring-fail/20"
+                      : "border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-sm",
                   ].join(" ")}
                   aria-pressed={active}
                 >
@@ -59,7 +59,7 @@ export function DonationDestinationPicker({
                   <div className="relative flex flex-col gap-2.5">
                     <DonationLogo id={option.logoKey} />
                     <div>
-                      <p className="text-sm font-bold leading-tight text-zinc-100">
+                      <p className="text-sm font-semibold leading-tight text-zinc-900">
                         {option.name}
                       </p>
                       <p className="mt-0.5 text-[10px] text-zinc-500">
@@ -68,7 +68,7 @@ export function DonationDestinationPicker({
                     </div>
                   </div>
                   {active && (
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-fail shadow-[0_0_8px_#ff4d4d]" />
+                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-fail" />
                   )}
                 </button>
               );
@@ -77,9 +77,9 @@ export function DonationDestinationPicker({
         </div>
 
         {selected && selected.id !== "other" && (
-          <p className="mt-2 rounded-xl border border-fail-border/50 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-400">
-            <span className="text-fail">選択中:</span> {selected.name}
-            <span className="mx-1 text-zinc-600">·</span>
+          <p className="mt-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-600">
+            <span className="font-medium text-fail">選択中:</span> {selected.name}
+            <span className="mx-1 text-zinc-300">·</span>
             寄付ページを自動設定済み
           </p>
         )}

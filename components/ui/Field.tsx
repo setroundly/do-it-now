@@ -11,7 +11,7 @@ export function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-xs font-semibold tracking-wide text-zinc-400">
+      <span className="text-xs font-semibold text-zinc-600">
         {label}
         {required && <span className="text-fail"> *</span>}
       </span>

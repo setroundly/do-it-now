@@ -210,7 +210,7 @@ export function ConfessionRoom() {
           e.preventDefault();
           submitPost(newBody);
         }}
-        className="rounded-2xl border border-fail-border/80 bg-fail-card/80 p-4 backdrop-blur-sm"
+        className="card p-4"
       >
         <p className="mb-3 text-xs font-semibold text-zinc-500">新しい懺悔</p>
         <input
@@ -302,7 +302,7 @@ function ThreadCard({
   const hasComforted = comforted.has(thread.id);
 
   return (
-    <li className="rounded-2xl border border-fail-border bg-fail-card/90 p-4">
+    <li className="card p-4">
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="font-display text-sm text-fail">{thread.display_name}</span>
         <time className="text-[10px] tabular-nums text-zinc-600">
@@ -310,7 +310,7 @@ function ThreadCard({
         </time>
       </div>
 
-      <p className="font-display text-base leading-relaxed text-zinc-100">
+      <p className="text-base leading-relaxed text-zinc-800">
         {thread.body}
       </p>
 
@@ -323,28 +323,28 @@ function ThreadCard({
         <button
           type="button"
           onClick={onReplyOpen}
-          className="rounded-xl border border-fail-border px-3 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-200"
+          className="rounded-lg border border-zinc-200 px-3 py-2 text-xs font-medium text-zinc-600 hover:border-zinc-300 hover:text-zinc-900"
         >
           慰める
         </button>
       </div>
 
       {thread.replies && thread.replies.length > 0 && (
-        <ul className="mt-4 flex flex-col gap-2 border-l-2 border-fail/20 pl-3">
+        <ul className="mt-4 flex flex-col gap-2 border-l-2 border-zinc-200 pl-3">
           {thread.replies.map((reply) => (
             <li
               key={reply.id}
-              className="rounded-xl bg-zinc-950/40 px-3 py-2.5"
+              className="rounded-lg bg-zinc-50 px-3 py-2.5"
             >
               <div className="mb-1 flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold text-zinc-400">
+                <span className="text-xs font-semibold text-zinc-600">
                   {reply.display_name}
                 </span>
                 <time className="text-[10px] tabular-nums text-zinc-600">
                   {formatJstTime(reply.created_at)}
                 </time>
               </div>
-              <p className="text-sm leading-relaxed text-zinc-300">{reply.body}</p>
+              <p className="text-sm leading-relaxed text-zinc-700">{reply.body}</p>
               <div className="mt-2">
                 <ComfortButton
                   count={reply.comfort_count}
@@ -359,7 +359,7 @@ function ThreadCard({
       )}
 
       {replyTo === thread.id && (
-        <div className="mt-3 border-t border-fail-border/50 pt-3">
+        <div className="mt-3 border-t border-zinc-200 pt-3">
           <textarea
             className="input min-h-[72px] resize-none text-sm"
             placeholder="励ましの言葉を…"
@@ -401,8 +401,8 @@ function ComfortButton({
         small ? "px-2.5 py-1.5 text-[11px]" : "px-3 py-2 text-xs"
       } ${
         active
-          ? "bg-fail/20 text-fail"
-          : "border border-fail-border bg-zinc-950/50 text-zinc-300 hover:border-fail/50 hover:text-fail"
+          ? "bg-fail-soft text-fail"
+          : "border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:text-zinc-900"
       }`}
     >
       {active ? "🤝 送った" : "🤝 慰める"} {count > 0 && `(${count})`}

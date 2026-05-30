@@ -46,7 +46,7 @@ export function DeadlinePicker({ value, onChange }: DeadlinePickerProps) {
 
   return (
     <Field label="締切" hint="日本時間（JST）で設定" required>
-      <div className="rounded-2xl border border-fail-border/80 bg-zinc-950/80 p-4">
+      <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-zinc-500">
@@ -81,7 +81,7 @@ export function DeadlinePicker({ value, onChange }: DeadlinePickerProps) {
         </div>
 
         {previewIso && (
-          <p className="mt-3 flex items-center gap-2 rounded-xl bg-fail/10 px-3 py-2 text-sm text-zinc-200">
+          <p className="mt-3 flex items-center gap-2 rounded-lg bg-fail-soft px-3 py-2 text-sm text-zinc-800">
             <span className="text-fail">●</span>
             <span>
               <span className="text-zinc-500">締切:</span>{" "}

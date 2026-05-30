@@ -1,30 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, RocknRoll_One, Slackside_One } from "next/font/google";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { Noto_Sans_JP } from "next/font/google";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/branding";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const notoSansJP = Noto_Sans_JP({
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const rockDisplay = RocknRoll_One({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-rock",
-  display: "swap",
-});
-
-const jaggedDisplay = Slackside_One({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-jagged",
+  variable: "--font-sans",
   display: "swap",
 });
 
@@ -33,7 +15,7 @@ export const metadata: Metadata = {
   description: APP_DESCRIPTION,
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: APP_NAME,
   },
 };
@@ -42,10 +24,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
-  ],
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
@@ -54,12 +33,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className="dark" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${rockDisplay.variable} ${jaggedDisplay.variable} font-sans`}
-      >
-        <ThemeProvider>{children}</ThemeProvider>
-      </body>
+    <html lang="ja">
+      <body className={`${notoSansJP.variable} font-sans`}>{children}</body>
     </html>
   );
 }

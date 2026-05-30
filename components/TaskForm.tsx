@@ -204,11 +204,11 @@ export function TaskForm({ onCreated }: TaskFormProps) {
         onCustomUrlChange={setCustomDonateUrl}
       />
 
-      <div className="rounded-2xl border border-fail-border/60 bg-zinc-950/40 p-4">
-        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+      <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+        <p className="mb-1 text-xs font-semibold text-zinc-600">
           見届け人
         </p>
-        <p className="mb-3 text-xs text-zinc-600">
+        <p className="mb-3 text-xs text-zinc-500">
           任意。メールを入れた場合だけ、失敗時に通知します。
         </p>
         <div className="flex flex-col gap-4">
@@ -244,7 +244,7 @@ export function TaskForm({ onCreated }: TaskFormProps) {
       <button
         type="submit"
         disabled={submitting}
-        className="rounded-2xl bg-gradient-to-r from-fail to-fail-muted py-4 text-base font-bold text-white shadow-[0_8px_32px_rgba(255,77,77,0.35)] transition hover:brightness-110 disabled:opacity-50"
+        className="rounded-xl bg-fail py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-fail-muted disabled:opacity-50"
       >
         {submitting ? "設定中…" : "タスクを設定"}
       </button>

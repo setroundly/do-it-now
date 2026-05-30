@@ -5,38 +5,17 @@
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
-  }
-
-  html.dark {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   body {
-    @apply min-h-screen antialiased text-zinc-900;
+    @apply min-h-screen bg-white antialiased text-zinc-900;
     min-height: 100dvh;
     min-height: -webkit-fill-available;
-    background-color: #fafafa;
-    background-image: url("/bg-magic-circle.svg");
-    background-position: center 52%;
-    background-repeat: no-repeat;
-    background-size: min(88vmin, 480px);
-    /* Safari iOS: fixed 背景は描画不具合・真っ白になることがある */
-    background-attachment: scroll;
-  }
-
-  html.dark body {
-    @apply text-zinc-100;
-    background-color: #0a0a0a;
-    background-image: url("/bg-magic-circle.svg");
-    background-position: center 52%;
-    background-repeat: no-repeat;
-    background-size: min(88vmin, 480px);
-    background-attachment: scroll;
   }
 }
 
 @layer components {
-  /* タイムライン空表示と同じサブコピー */
   .text-empty-hint {
     @apply text-center text-sm leading-relaxed text-zinc-500;
   }
@@ -48,64 +27,37 @@
   @keyframes failure-enter {
     from {
       opacity: 0;
-      transform: translateY(-10px) scale(0.98);
+      transform: translateY(-8px);
     }
     to {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: translateY(0);
     }
   }
 
   .app-shell {
-    @apply relative min-h-screen bg-transparent;
+    @apply relative min-h-screen bg-white;
     min-height: 100dvh;
     min-height: -webkit-fill-available;
   }
-}
 
-@layer components {
   .input {
-    @apply w-full rounded-xl border border-zinc-300 bg-white px-4 py-3.5 text-base text-zinc-900 outline-none transition;
-    @apply placeholder:text-zinc-400 focus:border-fail/50 focus:ring-2 focus:ring-fail/25;
-    @apply dark:border-fail-border/80 dark:bg-zinc-950/90 dark:text-zinc-100 dark:placeholder:text-zinc-600;
+    @apply w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 outline-none transition;
+    @apply placeholder:text-zinc-400 focus:border-fail/40 focus:ring-2 focus:ring-fail/10;
   }
 
   .input-datetime {
-    color-scheme: dark;
+    color-scheme: light;
     min-height: 3rem;
     -webkit-appearance: none;
     appearance: none;
   }
 
-  .input-datetime::-webkit-calendar-picker-indicator {
-    filter: invert(0.85) sepia(1) saturate(5) hue-rotate(320deg);
-    opacity: 0.9;
-    cursor: pointer;
-  }
-
-  /* バンド系ディスプレイ書体（読みやすさ優先） */
   .font-display {
-    font-family: var(--font-jagged), "Slackside One", "RocknRoll One", sans-serif;
-    font-weight: 400;
+    @apply font-semibold tracking-tight;
   }
 
-  .logo-brand {
-    color: #ff4d4d;
-    letter-spacing: 0.02em;
-    transform: skewX(-4deg);
-    text-shadow:
-      1px 1px 0 #0a0a0a,
-      -1px 1px 0 #0a0a0a,
-      1px -1px 0 #0a0a0a,
-      -1px -1px 0 #0a0a0a,
-      2px 2px 0 #000,
-      0 0 18px rgba(224, 32, 32, 0.4);
-  }
-
-  @supports (paint-order: stroke fill) {
-    .logo-brand {
-      -webkit-text-stroke: 1.5px #0a0a0a;
-      paint-order: stroke fill;
-    }
+  .card {
+    @apply rounded-xl border border-zinc-200 bg-white shadow-card;
   }
 }

@@ -161,8 +161,8 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="app-shell min-h-screen text-zinc-100">
-      <header className="border-b border-fail-border bg-fail-bg px-4 py-3">
+    <div className="app-shell min-h-screen text-zinc-900">
+      <header className="border-b border-zinc-200 bg-white px-4 py-3">
         <div className="mx-auto flex max-w-md items-center justify-between gap-2">
           <Link href="/">
             <AppLogo size="sm" showTagline={false} />
@@ -183,9 +183,9 @@ export default function AdminPage() {
         {!isAdmin ? (
           <form
             onSubmit={handleLogin}
-            className="rounded-2xl border border-fail-border bg-fail-card p-5"
+            className="card p-5"
           >
-            <h1 className="font-display mb-1 text-xl text-fail">管理画面</h1>
+            <h1 className="font-display mb-1 text-lg text-zinc-900">管理画面</h1>
             <p className="mb-4 text-sm text-zinc-500">
               ADMIN_SECRET を入力してください
             </p>
@@ -220,14 +220,14 @@ export default function AdminPage() {
           </form>
         ) : (
           <>
-            <h1 className="font-display mb-1 text-xl text-fail">管理画面</h1>
+            <h1 className="font-display mb-1 text-lg text-zinc-900">管理画面</h1>
             <p className="mb-4 text-sm text-zinc-500">
               投稿の削除はここからのみ可能です（一般ユーザーには表示されません）
             </p>
 
             <AdminEmailDiagnostics />
 
-            <div className="mb-4 flex rounded-xl border border-fail-border bg-fail-card/50 p-1">
+            <div className="mb-4 flex rounded-lg border border-zinc-200 bg-zinc-50 p-1">
               <TabButton
                 active={tab === "failures"}
                 onClick={() => setTab("failures")}
@@ -245,7 +245,7 @@ export default function AdminPage() {
             )}
 
             {listError && (
-              <div className="mb-4 rounded-xl border border-red-900/50 bg-red-950/30 p-4 text-sm text-red-300">
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                 {listError}
                 <button
                   type="button"
@@ -270,15 +270,15 @@ export default function AdminPage() {
                 {failures.map((failure) => (
                   <li
                     key={failure.id}
-                    className="rounded-2xl border border-fail-border bg-fail-card p-4"
+                    className="card p-4"
                   >
                     <p className="font-display text-sm text-fail">
                       {failureHeadline(failure)}
                     </p>
-                    <p className="mt-1 font-semibold text-zinc-200">
+                    <p className="mt-1 font-medium text-zinc-800">
                       『{failure.title}』
                     </p>
-                    <p className="mt-2 line-clamp-2 text-sm text-zinc-400">
+                    <p className="mt-2 line-clamp-2 text-sm text-zinc-600">
                       {failure.description}
                     </p>
                     <p className="mt-2 text-xs text-fail">
@@ -301,8 +301,8 @@ export default function AdminPage() {
                 {confessionItems.map(({ post, isReply }) => (
                   <li
                     key={post.id}
-                    className={`rounded-2xl border border-fail-border bg-fail-card p-4 ${
-                      isReply ? "ml-3 border-fail-border/60" : ""
+                    className={`card p-4 ${
+                      isReply ? "ml-3 border-zinc-100" : ""
                     }`}
                   >
                     <div className="mb-1 flex items-center justify-between gap-2">
@@ -318,7 +318,7 @@ export default function AdminPage() {
                     <p className="font-display text-sm text-fail">
                       {post.display_name}
                     </p>
-                    <p className="mt-2 text-sm leading-relaxed text-zinc-300">
+                    <p className="mt-2 text-sm leading-relaxed text-zinc-700">
                       {post.body}
                     </p>
                     {!isReply && (post.replies?.length ?? 0) > 0 && (
@@ -363,7 +363,7 @@ function TabButton({
       className={`flex-1 rounded-lg py-2 text-xs font-semibold transition ${
         active
           ? "bg-fail text-white"
-          : "text-zinc-500 hover:text-zinc-300"
+          : "text-zinc-500 hover:text-zinc-700"
       }`}
     >
       {label}
@@ -383,7 +383,7 @@ function DeleteButton({
       type="button"
       disabled={loading}
       onClick={onClick}
-      className="mt-3 w-full rounded-xl border border-red-900/60 bg-red-950/40 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-950/70 disabled:opacity-50"
+      className="mt-3 w-full rounded-lg border border-red-200 bg-red-50 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
     >
       {loading ? "削除中…" : "この投稿を削除"}
     </button>

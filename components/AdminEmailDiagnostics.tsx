@@ -61,8 +61,8 @@ export function AdminEmailDiagnostics() {
   if (!config) return null;
 
   return (
-    <details className="mb-5 rounded-2xl border border-fail-border/80 bg-zinc-950/50 p-4">
-      <summary className="cursor-pointer text-sm font-semibold text-zinc-300">
+    <details className="mb-5 card p-4">
+      <summary className="cursor-pointer text-sm font-semibold text-zinc-700">
         メール（Resend）診断
         <span
           className={`ml-2 text-xs ${config.ready ? "text-emerald-400" : "text-fail"}`}
@@ -78,7 +78,7 @@ export function AdminEmailDiagnostics() {
       </ul>
 
       {config.hints.length > 0 && (
-        <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-amber-200/90">
+        <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-amber-800">
           {config.hints.map((h) => (
             <li key={h}>{h}</li>
           ))}
@@ -100,7 +100,7 @@ export function AdminEmailDiagnostics() {
         <button
           type="submit"
           disabled={testing || !config.ready}
-          className="rounded-lg border border-fail-border py-2 text-sm font-semibold text-fail disabled:opacity-40"
+          className="rounded-lg border border-zinc-200 py-2 text-sm font-semibold text-fail disabled:opacity-40"
         >
           {testing ? "送信中…" : "テストメールを送る"}
         </button>
