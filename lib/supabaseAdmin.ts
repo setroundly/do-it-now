@@ -14,6 +14,16 @@ function readSupabaseUrl(): string | undefined {
 
 const supabaseUrl = readSupabaseUrl();
 
+function getSupabaseUrlOrThrow(): string {
+  const url = readSupabaseUrl();
+  if (!url) {
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_URL の形式が正しくありません（例: https://xxxx.supabase.co）"
+    );
+  }
+  return url;
+}
+
 function getServiceRoleKey(): string | undefined {
   return (
     process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ??
@@ -47,20 +57,21 @@ export function getSupabaseAdmin(): SupabaseClient {
     throw new Error(configError);
   }
 
-  return createClient(supabaseUrl!, getServiceRoleKey()!, {
+  return createClient(getSupabaseUrlOrThrow(), getServiceRoleKey()!, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
 
 export function getSupabaseAnon(): SupabaseClient {
   const anonKey = getAnonKey();
-  if (!supabaseUrl || !anonKey) {
+  const url = getSupabaseUrlOrThrow();
+  if (!anonKey) {
     throw new Error(
       "NEXT_PUBLIC_SUPABASE_ANON_KEY または NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY が未設定です"
     );
   }
 
-  return createClient(supabaseUrl, anonKey, {
+  return createClient(url, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

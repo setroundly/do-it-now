@@ -42,6 +42,14 @@ export function Timeline() {
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {error}
+          <a
+            href="/api/health"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 block text-xs font-medium text-fail underline"
+          >
+            接続診断を開く（/api/health）
+          </a>
           <button
             type="button"
             onClick={() => void refresh()}
