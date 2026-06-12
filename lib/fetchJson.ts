@@ -4,7 +4,14 @@ export async function fetchJson<T = ApiErrorBody>(
   input: RequestInfo | URL,
   init?: RequestInit
 ): Promise<{ res: Response; data: T }> {
-  const res = await fetch(input, init);
+  let res: Response;
+  try {
+    res = await fetch(input, init);
+  } catch {
+    throw new Error(
+      "サーバーに接続できませんでした。ネットワークまたはデプロイ設定を確認してください。"
+    );
+  }
   const data = await parseJsonResponse<T>(res);
   return { res, data };
 }
@@ -40,5 +47,9 @@ export function apiErrorMessage(
   fallback: string
 ): string {
   const err = (data as ApiErrorBody).error;
-  return typeof err === "string" ? err : fallback;
+  if (typeof err !== "string") return fallback;
+  if (err.includes("fetch failed")) {
+    return "Supabase に接続できません。環境変数（NEXT_PUBLIC_SUPABASE_URL 等）を確認してください。";
+  }
+  return err;
 }
