@@ -1,38 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { apiErrorResponse, supabaseConfigResponse } from "@/lib/apiRoute";
+import { requireAppUser } from "@/lib/requireAppUser";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
-const deleteSchema = z.object({
-  userId: z.string().uuid(),
-});
-
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const configError = supabaseConfigResponse();
   if (configError) return configError;
 
+  const auth = await requireAppUser();
+  if (auth.error) return auth.error;
+
   try {
     const { id } = await params;
-
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-
-    const parsed = deleteSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "userId が必要です" },
-        { status: 400 }
-      );
-    }
-
-    const { userId } = parsed.data;
+    const { user } = auth;
     const supabase = getSupabaseAdmin();
 
     const { data: task, error: fetchError } = await supabase
@@ -45,7 +28,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    if (task.user_id !== userId) {
+    if (task.user_id !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -62,7 +45,7 @@ export async function DELETE(
       .from("tasks")
       .delete()
       .eq("id", id)
-      .eq("user_id", userId);
+      .eq("user_id", user.id);
 
     if (deleteError) {
       return NextResponse.json({ error: deleteError.message }, { status: 500 });

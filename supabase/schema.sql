@@ -7,6 +7,7 @@ create type notification_channel as enum ('email', 'line');
 create table public.users (
   id uuid primary key default gen_random_uuid(),
   display_name text not null check (char_length(display_name) between 1 and 32),
+  auth_user_id uuid unique references auth.users(id) on delete cascade,
   created_at timestamptz not null default now()
 );
 

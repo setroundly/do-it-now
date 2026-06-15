@@ -2,13 +2,10 @@
 
 import { useState } from "react";
 import { apiErrorMessage, fetchJson } from "@/lib/fetchJson";
-import {
-  USER_STORAGE_KEY,
-  USER_NAME_STORAGE_KEY,
-} from "@/lib/constants";
 import { datetimeLocalJstToUtcIso, defaultDeadlineJstParts } from "@/lib/datetime";
 import type { DonationDestinationId } from "@/lib/donationDestinations";
 import type { Task } from "@/lib/types";
+import { useAppAuth } from "@/lib/useAppAuth";
 import { DeadlinePicker } from "./DeadlinePicker";
 import { DonationDestinationPicker } from "./DonationDestinationPicker";
 import { Field } from "./ui/Field";
@@ -23,10 +20,8 @@ const defaultDeadline = (() => {
 })();
 
 export function TaskForm({ onCreated }: TaskFormProps) {
-  const [displayName, setDisplayName] = useState(() => {
-    if (typeof window === "undefined") return "";
-    return localStorage.getItem(USER_NAME_STORAGE_KEY) ?? "";
-  });
+  const { user } = useAppAuth();
+  const [displayName, setDisplayName] = useState("");
   const [title, setTitle] = useState("");
   const [deadlineAt, setDeadlineAt] = useState(defaultDeadline);
   const [penaltyAmount, setPenaltyAmount] = useState("1000");
@@ -41,9 +36,16 @@ export function TaskForm({ onCreated }: TaskFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const effectiveName = displayName.trim() || user?.display_name || "";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!effectiveName) {
+      setError("表示名を入力してください");
+      return;
+    }
 
     if (!selectedDonationId) {
       setError("寄付先を選択してください");
@@ -70,11 +72,6 @@ export function TaskForm({ onCreated }: TaskFormProps) {
 
     setSubmitting(true);
 
-    const userId =
-      typeof window !== "undefined"
-        ? localStorage.getItem(USER_STORAGE_KEY) ?? undefined
-        : undefined;
-
     let deadlineIso: string;
     try {
       deadlineIso = datetimeLocalJstToUtcIso(deadlineAt);
@@ -93,8 +90,7 @@ export function TaskForm({ onCreated }: TaskFormProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId,
-          displayName: displayName.trim(),
+          displayName: effectiveName,
           title: title.trim(),
           deadlineAt: deadlineIso,
           penaltyAmount: Number(penaltyAmount),
@@ -116,9 +112,6 @@ export function TaskForm({ onCreated }: TaskFormProps) {
       if (!data.user || !data.task) {
         throw new Error("作成に失敗しました");
       }
-
-      localStorage.setItem(USER_STORAGE_KEY, data.user.id);
-      localStorage.setItem(USER_NAME_STORAGE_KEY, data.user.display_name);
 
       setTitle("");
       setDeadlineAt(defaultDeadline);
@@ -145,12 +138,16 @@ export function TaskForm({ onCreated }: TaskFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <Field label="あなたの名前" required>
+      <Field
+        label="表示名"
+        hint={user ? `Google: ${user.display_name}` : undefined}
+        required
+      >
         <input
           className="input"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="名前"
+          placeholder={user?.display_name ?? "名前"}
           required
           maxLength={32}
         />

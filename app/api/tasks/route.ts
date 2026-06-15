@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { apiErrorResponse, supabaseConfigResponse } from "@/lib/apiRoute";
+import { requireAppUser } from "@/lib/requireAppUser";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 const createSchema = z.object({
-  userId: z.string().uuid().optional(),
-  displayName: z.string().min(1).max(32),
+  displayName: z.string().min(1).max(32).optional(),
   title: z.string().min(1).max(120),
   deadlineAt: z.string().datetime(),
   penaltyAmount: z.number().int().positive(),
@@ -25,14 +25,14 @@ export async function GET(request: NextRequest) {
   if (configError) return configError;
 
   try {
-    const userId = request.nextUrl.searchParams.get("userId");
     const supabase = getSupabaseAdmin();
+    const auth = await requireAppUser();
 
-    if (userId) {
+    if (!auth.error) {
       const { data, error } = await supabase
         .from("tasks")
         .select("*")
-        .eq("user_id", userId)
+        .eq("user_id", auth.user.id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -92,6 +92,9 @@ export async function POST(request: NextRequest) {
   const configError = supabaseConfigResponse();
   if (configError) return configError;
 
+  const auth = await requireAppUser();
+  if (auth.error) return auth.error;
+
   try {
     let body: unknown;
     try {
@@ -110,34 +113,8 @@ export async function POST(request: NextRequest) {
 
     const data = parsed.data;
     const supabase = getSupabaseAdmin();
-
-    let userId = data.userId;
-
-    if (userId) {
-      const { data: existing } = await supabase
-        .from("users")
-        .select("id")
-        .eq("id", userId)
-        .single();
-
-      if (!existing) userId = undefined;
-    }
-
-    if (!userId) {
-      const { data: user, error: userError } = await supabase
-        .from("users")
-        .insert({ display_name: data.displayName })
-        .select("id, display_name")
-        .single();
-
-      if (userError || !user) {
-        return NextResponse.json(
-          { error: userError?.message ?? "Failed to create user" },
-          { status: 500 }
-        );
-      }
-      userId = user.id;
-    }
+    const userId = auth.user.id;
+    const displayName = data.displayName?.trim() || auth.user.display_name;
 
     const { data: task, error: taskError } = await supabase
       .from("tasks")
@@ -177,7 +154,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      user: { id: userId, display_name: data.displayName },
+      user: { id: userId, display_name: displayName },
       task,
     });
   } catch (err) {

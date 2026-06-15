@@ -41,8 +41,14 @@ npm run dev
 3. 続けて `supabase/confession.sql` を実行（懺悔室）
 4. 続けて `supabase/failures.sql` を実行（リアルタイムタイムライン）
 5. **Database → Replication** で `failures` テーブルの Realtime を ON
-4. **Settings → API** から URL / anon key / service_role key を `.env.local` に設定
-5. （任意）**Database → Replication** で `timeline_posts` の Realtime を有効化
+5. **Settings → API** から URL / anon key / service_role key を `.env.local` に設定
+6. **Google ログイン**（タスク作成・自分のタスクに必要）:
+   - SQL Editor で `supabase/auth-google.sql` を実行（既存 DB の場合）
+   - **Authentication → Providers → Google** を有効化
+   - Google Cloud Console で OAuth クライアントを作成し、Client ID / Secret を Supabase に設定
+   - **Authentication → URL Configuration** の Redirect URLs に  
+     `http://localhost:3000/auth/callback` と本番 `https://あなたのドメイン/auth/callback` を追加
+7. （任意）**Database → Replication** で `timeline_posts` の Realtime を有効化
 
 ## Vercel デプロイ
 

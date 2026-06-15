@@ -7,10 +7,12 @@ import { Timeline } from "./Timeline";
 import { TaskForm } from "./TaskForm";
 import { MyTasks } from "./MyTasks";
 import { ConfessionRoom } from "./ConfessionRoom";
+import { GoogleLoginButton } from "./GoogleLoginButton";
 import { AppHeader } from "./layout/AppHeader";
 import { LeftSidebar, type SidebarView } from "./layout/LeftSidebar";
 import { RightSidebar } from "./layout/RightSidebar";
 import { computeTimelineStats } from "@/lib/timelineStats";
+import { useAppAuth } from "@/lib/useAppAuth";
 
 type View = SidebarView;
 
@@ -24,6 +26,7 @@ export function HomeApp() {
   const [view, setView] = useState<View>("home");
   const [taskRefresh, setTaskRefresh] = useState(0);
   const timeline = useFailuresTimeline();
+  const { user, loading: authLoading } = useAppAuth();
 
   const bumpTaskRefresh = useCallback(() => {
     setTaskRefresh((k) => k + 1);
@@ -61,12 +64,21 @@ export function HomeApp() {
               <p className="mb-5 text-sm text-zinc-500">
                 失敗したら、選んだ先へ強制送還。
               </p>
-              <TaskForm
-                onCreated={() => {
-                  setTaskRefresh((k) => k + 1);
-                  setView("mine");
-                }}
-              />
+              {!authLoading && !user ? (
+                <div className="card flex flex-col items-center gap-4 p-8 text-center">
+                  <p className="text-sm text-zinc-600">
+                    タスクを設定するには Google でログインしてください。
+                  </p>
+                  <GoogleLoginButton />
+                </div>
+              ) : (
+                <TaskForm
+                  onCreated={() => {
+                    setTaskRefresh((k) => k + 1);
+                    setView("mine");
+                  }}
+                />
+              )}
             </section>
           )}
 

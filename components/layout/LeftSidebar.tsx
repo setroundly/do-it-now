@@ -1,8 +1,8 @@
 "use client";
 
 import { UserAvatar, userHandle } from "@/components/UserAvatar";
-import { USER_NAME_STORAGE_KEY } from "@/lib/constants";
-import { useEffect, useState } from "react";
+import { GoogleLoginButton } from "@/components/GoogleLoginButton";
+import { useAppAuth } from "@/lib/useAppAuth";
 
 export type SidebarView =
   | "home"
@@ -18,11 +18,8 @@ interface LeftSidebarProps {
 }
 
 export function LeftSidebar({ active, onNavigate }: LeftSidebarProps) {
-  const [displayName, setDisplayName] = useState("ゲスト");
-
-  useEffect(() => {
-    setDisplayName(localStorage.getItem(USER_NAME_STORAGE_KEY) ?? "ゲスト");
-  }, []);
+  const { user, loading, signOut } = useAppAuth();
+  const displayName = user?.display_name ?? "ゲスト";
 
   const linkClass = (v: SidebarView) =>
     `flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
@@ -42,6 +39,20 @@ export function LeftSidebar({ active, onNavigate }: LeftSidebarProps) {
               <p className="truncate text-xs text-zinc-500">{userHandle(displayName)}</p>
             </div>
           </div>
+          {!loading && !user && (
+            <div className="mt-3">
+              <GoogleLoginButton className="w-full" />
+            </div>
+          )}
+          {!loading && user && (
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="mt-3 text-xs text-zinc-500 underline hover:text-zinc-700"
+            >
+              ログアウト
+            </button>
+          )}
           <p className="mt-3 text-xs leading-relaxed text-zinc-500">
             締切と向き合う日々。失敗は隠さず、覚悟に変える。
           </p>

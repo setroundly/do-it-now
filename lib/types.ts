@@ -4,6 +4,7 @@ export type NotificationChannel = "email" | "line";
 export interface User {
   id: string;
   display_name: string;
+  auth_user_id?: string | null;
   created_at: string;
 }
 
@@ -70,8 +71,7 @@ export interface ConfessionPost {
 }
 
 export interface CreateTaskPayload {
-  userId?: string;
-  displayName: string;
+  displayName?: string;
   title: string;
   deadlineAt: string;
   penaltyAmount: number;

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { AppLogo } from "@/components/AppLogo";
+import { GoogleLoginButton } from "@/components/GoogleLoginButton";
 import { UserAvatar } from "@/components/UserAvatar";
-import { USER_NAME_STORAGE_KEY } from "@/lib/constants";
-import { useEffect, useState } from "react";
+import { useAppAuth } from "@/lib/useAppAuth";
 
 type NavView = "home" | "timeline" | "ranking";
 
@@ -15,11 +15,8 @@ export function AppHeader({
   activeView: NavView;
   onNavigate: (view: NavView) => void;
 }) {
-  const [displayName, setDisplayName] = useState("ゲスト");
-
-  useEffect(() => {
-    setDisplayName(localStorage.getItem(USER_NAME_STORAGE_KEY) ?? "ゲスト");
-  }, []);
+  const { user, loading, signOut } = useAppAuth();
+  const displayName = user?.display_name ?? "ゲスト";
 
   const navClass = (v: NavView) =>
     `rounded-lg px-3 py-1.5 text-sm font-medium transition ${
@@ -56,10 +53,25 @@ export function AppHeader({
               aria-label="失敗を検索"
             />
           </div>
-          <div className="flex items-center gap-2 rounded-full bg-white/10 py-1 pl-1 pr-3">
-            <UserAvatar name={displayName} size="sm" />
-            <span className="hidden text-sm font-medium sm:inline">{displayName}</span>
-          </div>
+          {!loading && user ? (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 rounded-full bg-white/10 py-1 pl-1 pr-3">
+                <UserAvatar name={displayName} size="sm" />
+                <span className="hidden max-w-[120px] truncate text-sm font-medium sm:inline">
+                  {displayName}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => void signOut()}
+                className="hidden rounded-lg px-2 py-1 text-xs text-white/80 hover:bg-white/10 sm:block"
+              >
+                ログアウト
+              </button>
+            </div>
+          ) : !loading ? (
+            <GoogleLoginButton className="!border-0 !bg-white !py-1.5 !text-xs !text-zinc-800" label="ログイン" />
+          ) : null}
         </div>
       </div>
     </header>

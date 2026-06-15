@@ -3,21 +3,19 @@
 import { useCallback, useEffect, useState } from "react";
 import { formatJstDateTime } from "@/lib/datetime";
 import { apiErrorMessage, fetchJson, parseJsonResponse } from "@/lib/fetchJson";
-import { USER_STORAGE_KEY } from "@/lib/constants";
 import { resolveTaskDonateUrl } from "@/lib/resolveDonateUrl";
+import { useAppAuth } from "@/lib/useAppAuth";
 import type { Task } from "@/lib/types";
+import { GoogleLoginButton } from "./GoogleLoginButton";
 
 export function MyTasks({ refreshKey }: { refreshKey?: number }) {
+  const { user, loading: authLoading } = useAppAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hasUser, setHasUser] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchTasks = useCallback(async () => {
-    const userId = localStorage.getItem(USER_STORAGE_KEY);
-    setHasUser(!!userId);
-
-    if (!userId) {
+    if (!user) {
       setTasks([]);
       setLoading(false);
       return;
@@ -25,9 +23,7 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
 
     setLoading(true);
     try {
-      const { res, data } = await fetchJson<{ tasks?: Task[] }>(
-        `/api/tasks?userId=${userId}`
-      );
+      const { res, data } = await fetchJson<{ tasks?: Task[] }>("/api/tasks");
       if (!res.ok) throw new Error(apiErrorMessage(data, "読み込みに失敗しました"));
       setTasks(data.tasks ?? []);
     } catch {
@@ -35,16 +31,14 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks, refreshKey]);
+    if (authLoading) return;
+    void fetchTasks();
+  }, [fetchTasks, refreshKey, authLoading]);
 
   const deleteTask = async (task: Task) => {
-    const userId = localStorage.getItem(USER_STORAGE_KEY);
-    if (!userId) return;
-
     const timelineNote =
       task.status === "failed"
         ? "\n\n※ タイムラインに載っている失敗投稿も一緒に消えます。"
@@ -65,8 +59,6 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
     try {
       const res = await fetch(`/api/tasks/${task.id}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
       });
       const data = await parseJsonResponse<{ error?: string }>(res);
       if (!res.ok) {
@@ -81,11 +73,8 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
   };
 
   const completeTask = async (taskId: string) => {
-    const userId = localStorage.getItem(USER_STORAGE_KEY);
     const res = await fetch(`/api/tasks/${taskId}/complete`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
     });
     if (res.ok) {
       fetchTasks();
@@ -95,15 +84,18 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
     alert(apiErrorMessage(data, "完了できませんでした"));
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return <p className="text-empty-hint py-8">読み込み中…</p>;
   }
 
-  if (!hasUser) {
+  if (!user) {
     return (
-      <p className="text-empty-hint py-12">
-        タスクを1つ作成すると、ここに表示されます。
-      </p>
+      <div className="flex flex-col items-center gap-4 py-12 text-center">
+        <p className="text-empty-hint">
+          タスクの作成・管理にはログインが必要です。
+        </p>
+        <GoogleLoginButton />
+      </div>
     );
   }
 

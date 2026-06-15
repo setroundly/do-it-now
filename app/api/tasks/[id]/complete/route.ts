@@ -1,25 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse, supabaseConfigResponse } from "@/lib/apiRoute";
+import { requireAppUser } from "@/lib/requireAppUser";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const configError = supabaseConfigResponse();
   if (configError) return configError;
 
+  const auth = await requireAppUser();
+  if (auth.error) return auth.error;
+
   try {
     const { id } = await params;
-    let userId: string | undefined;
-
-    try {
-      const body = await request.json();
-      userId = body?.userId;
-    } catch {
-      // optional body
-    }
-
+    const { user } = auth;
     const supabase = getSupabaseAdmin();
 
     const { data: task, error: fetchError } = await supabase
@@ -32,7 +28,7 @@ export async function POST(
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    if (userId && task.user_id !== userId) {
+    if (task.user_id !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
