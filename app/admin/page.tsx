@@ -165,7 +165,7 @@ export default function AdminPage() {
       <header className="border-b border-zinc-200 bg-white px-4 py-3">
         <div className="mx-auto flex max-w-md items-center justify-between gap-2">
           <Link href="/">
-            <AppLogo size="sm" showTagline={false} />
+            <AppLogo showTagline={false} />
           </Link>
           {isAdmin && (
             <button

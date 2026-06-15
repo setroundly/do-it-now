@@ -244,7 +244,7 @@ export function TaskForm({ onCreated }: TaskFormProps) {
       <button
         type="submit"
         disabled={submitting}
-        className="rounded-xl bg-fail py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-fail-muted disabled:opacity-50"
+        className="rounded-xl bg-brand-600 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-50"
       >
         {submitting ? "設定中…" : "タスクを設定"}
       </button>

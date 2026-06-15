@@ -8,6 +8,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        brand: {
+          50: "#eff6ff",
+          100: "#dbeafe",
+          500: "#3b82f6",
+          600: "#2563eb",
+          700: "#1d4ed8",
+          800: "#1e40af",
+        },
+        page: "#f0f4f8",
         fail: {
           DEFAULT: "#dc2626",
           muted: "#b91c1c",

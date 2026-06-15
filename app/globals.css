@@ -9,7 +9,7 @@
   }
 
   body {
-    @apply min-h-screen bg-white antialiased text-zinc-900;
+    @apply min-h-screen bg-page antialiased text-zinc-900;
     min-height: 100dvh;
     min-height: -webkit-fill-available;
   }
@@ -36,14 +36,14 @@
   }
 
   .app-shell {
-    @apply relative min-h-screen bg-white;
+    @apply relative min-h-screen bg-page;
     min-height: 100dvh;
     min-height: -webkit-fill-available;
   }
 
   .input {
     @apply w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 outline-none transition;
-    @apply placeholder:text-zinc-400 focus:border-fail/40 focus:ring-2 focus:ring-fail/10;
+    @apply placeholder:text-zinc-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-100;
   }
 
   .input-datetime {
@@ -58,6 +58,19 @@
   }
 
   .card {
-    @apply rounded-xl border border-zinc-200 bg-white shadow-card;
+    @apply rounded-xl border border-zinc-200/80 bg-white shadow-card;
+  }
+
+  .fail-stamp {
+    @apply pointer-events-none absolute right-3 top-3 select-none;
+    transform: rotate(-12deg);
+    border: 3px solid #dc2626;
+    color: #dc2626;
+    font-size: 1.25rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    padding: 0.15rem 0.5rem;
+    opacity: 0.85;
+    border-radius: 0.25rem;
   }
 }
