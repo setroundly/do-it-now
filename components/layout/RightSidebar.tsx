@@ -1,6 +1,7 @@
 "use client";
 
 import { UserAvatar } from "@/components/UserAvatar";
+import { buildLabel } from "@/lib/buildInfo";
 import { computeTimelineStats } from "@/lib/timelineStats";
 import type { Failure } from "@/lib/types";
 
@@ -61,6 +62,7 @@ export function RightSidebar({ failures }: { failures: Failure[] }) {
 
         <footer className="px-1 pt-2 text-[10px] text-zinc-400">
           <p>© DOO IT NOW</p>
+          <p className="mt-1 tabular-nums opacity-60">build {buildLabel()}</p>
           <p className="mt-1">利用規約 · プライバシー · お問い合わせ</p>
         </footer>
       </div>
