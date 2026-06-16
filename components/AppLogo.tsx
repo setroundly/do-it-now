@@ -21,10 +21,10 @@ export function AppLogo({
       <Image
         src={LOGO_SRC}
         alt="DOO IT NOW"
-        width={160}
-        height={80}
+        width={240}
+        height={120}
         className={`w-auto object-contain ${
-          onHeader ? "h-8 rounded-md sm:h-9" : "h-10 sm:h-11"
+          onHeader ? "h-10 rounded-md sm:h-12" : "h-12 sm:h-14"
         }`}
         priority={onHeader}
       />
