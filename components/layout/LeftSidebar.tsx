@@ -7,16 +7,24 @@ export type SidebarView =
   | "home"
   | "create"
   | "timeline"
-  | "ranking"
   | "mine"
   | "confession";
 
+export type TimelineFeed = "good" | "bad";
+
 interface LeftSidebarProps {
   active: SidebarView;
+  timelineFeed: TimelineFeed;
   onNavigate: (view: SidebarView) => void;
+  onTimelineFeedChange: (feed: TimelineFeed) => void;
 }
 
-export function LeftSidebar({ active, onNavigate }: LeftSidebarProps) {
+export function LeftSidebar({
+  active,
+  timelineFeed,
+  onNavigate,
+  onTimelineFeedChange,
+}: LeftSidebarProps) {
   const { user, loading, signOut } = useAppAuth();
   const displayName = user?.display_name ?? "ゲスト";
 
@@ -26,6 +34,13 @@ export function LeftSidebar({ active, onNavigate }: LeftSidebarProps) {
         ? "bg-brand-50 text-brand-700"
         : "text-zinc-600 hover:bg-zinc-100"
     }`;
+
+  const showTimeline = active === "home" || active === "timeline";
+
+  const selectFeed = (feed: TimelineFeed) => {
+    onTimelineFeedChange(feed);
+    onNavigate("home");
+  };
 
   return (
     <aside className="hidden w-[240px] shrink-0 lg:block">
@@ -56,22 +71,53 @@ export function LeftSidebar({ active, onNavigate }: LeftSidebarProps) {
           <button type="button" onClick={() => onNavigate("home")} className={linkClass("home")}>
             <NavIcon name="home" /> ホーム
           </button>
+
           <button type="button" onClick={() => onNavigate("create")} className={linkClass("create")}>
-            <NavIcon name="pencil" /> 失敗する
+            <NavIcon name="pencil" />
+            <span className="min-w-0">
+              <span className="block leading-tight">失敗する</span>
+              <span
+                className={`mt-0.5 block text-[10px] font-normal leading-tight ${
+                  active === "create" ? "text-brand-500" : "text-zinc-400"
+                }`}
+              >
+                （目標を設定する）
+              </span>
+            </span>
           </button>
-          <button type="button" onClick={() => onNavigate("timeline")} className={linkClass("timeline")}>
-            <NavIcon name="timeline" /> タイムライン
-          </button>
-          <button type="button" onClick={() => onNavigate("timeline")} className={linkClass("timeline")}>
-            <NavIcon name="users" /> みんなの失敗
-          </button>
-          <button type="button" onClick={() => onNavigate("ranking")} className={linkClass("ranking")}>
-            <NavIcon name="trophy" /> ランキング
-          </button>
+
+          <div>
+            <button
+              type="button"
+              onClick={() => onNavigate("home")}
+              className={linkClass(showTimeline ? "home" : "timeline")}
+            >
+              <NavIcon name="timeline" /> タイムライン
+            </button>
+            <div className="ml-10 mt-1 flex gap-1.5 pr-2">
+              <FeedPill
+                label="good"
+                active={showTimeline && timelineFeed === "good"}
+                tone="good"
+                onClick={() => selectFeed("good")}
+              />
+              <FeedPill
+                label="bad"
+                active={showTimeline && timelineFeed === "bad"}
+                tone="bad"
+                onClick={() => selectFeed("bad")}
+              />
+            </div>
+          </div>
+
           <button type="button" onClick={() => onNavigate("mine")} className={linkClass("mine")}>
             <NavIcon name="task" /> 自分のタスク
           </button>
-          <button type="button" onClick={() => onNavigate("confession")} className={linkClass("confession")}>
+          <button
+            type="button"
+            onClick={() => onNavigate("confession")}
+            className={linkClass("confession")}
+          >
             <NavIcon name="heart" /> 懺悔室
           </button>
         </nav>
@@ -82,17 +128,39 @@ export function LeftSidebar({ active, onNavigate }: LeftSidebarProps) {
             締切に負けた失敗を公開し、選んだ先へ寄付するタスク管理です。
           </p>
         </div>
-
-        <button
-          type="button"
-          onClick={() => onNavigate("create")}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
-        >
-          <NavIcon name="pencil" className="text-white" />
-          タスクを設定する
-        </button>
       </div>
     </aside>
+  );
+}
+
+function FeedPill({
+  label,
+  active,
+  tone,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  tone: "good" | "bad";
+  onClick: () => void;
+}) {
+  const base =
+    tone === "good"
+      ? active
+        ? "bg-emerald-600 text-white"
+        : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+      : active
+        ? "bg-fail text-white"
+        : "bg-red-50 text-fail hover:bg-red-100";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex-1 rounded-lg px-2 py-1 text-xs font-bold uppercase tracking-wide transition ${base}`}
+    >
+      {label}
+    </button>
   );
 }
 

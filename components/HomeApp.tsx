@@ -9,21 +9,26 @@ import { MyTasks } from "./MyTasks";
 import { ConfessionRoom } from "./ConfessionRoom";
 import { GoogleLoginButton } from "./GoogleLoginButton";
 import { AppHeader } from "./layout/AppHeader";
-import { LeftSidebar, type SidebarView } from "./layout/LeftSidebar";
+import {
+  LeftSidebar,
+  type SidebarView,
+  type TimelineFeed,
+} from "./layout/LeftSidebar";
 import { RightSidebar } from "./layout/RightSidebar";
-import { computeTimelineStats } from "@/lib/timelineStats";
 import { useAppAuth } from "@/lib/useAppAuth";
 
 type View = SidebarView;
 
-function viewToHeader(view: View): "home" | "timeline" | "ranking" {
-  if (view === "ranking") return "ranking";
-  if (view === "timeline" || view === "home") return view === "home" ? "home" : "timeline";
+function viewToHeader(view: View): "home" | "timeline" {
+  if (view === "timeline" || view === "home") {
+    return view === "home" ? "home" : "timeline";
+  }
   return "home";
 }
 
 export function HomeApp() {
   const [view, setView] = useState<View>("home");
+  const [timelineFeed, setTimelineFeed] = useState<TimelineFeed>("bad");
   const [taskRefresh, setTaskRefresh] = useState(0);
   const timeline = useFailuresTimeline();
   const { user, loading: authLoading } = useAppAuth();
@@ -34,26 +39,30 @@ export function HomeApp() {
   useFailOverdue(bumpTaskRefresh);
 
   const showFeed = view === "home" || view === "timeline";
-  const stats = computeTimelineStats(timeline.failures);
 
   return (
     <div className="app-shell flex min-h-screen flex-col text-zinc-900">
       <AppHeader
         activeView={viewToHeader(view)}
         onNavigate={(v) => {
-          if (v === "ranking") setView("ranking");
-          else if (v === "timeline") setView("timeline");
+          if (v === "timeline") setView("timeline");
           else setView("home");
         }}
       />
 
       <div className="mx-auto flex w-full max-w-7xl flex-1 gap-0 px-4 lg:gap-6 lg:px-6">
-        <LeftSidebar active={view} onNavigate={setView} />
+        <LeftSidebar
+          active={view}
+          timelineFeed={timelineFeed}
+          onNavigate={setView}
+          onTimelineFeedChange={setTimelineFeed}
+        />
 
         <main className="min-w-0 flex-1 py-4 pb-20 lg:max-w-[600px] lg:pb-6 xl:max-w-[640px]">
           {showFeed && (
             <Timeline
               timeline={timeline}
+              feed={timelineFeed}
               onComposeClick={() => setView("create")}
             />
           )}
@@ -95,33 +104,6 @@ export function HomeApp() {
               <ConfessionRoom />
             </section>
           )}
-
-          {view === "ranking" && (
-            <section className="space-y-4">
-              <h2 className="text-lg font-bold text-zinc-900">ランキング</h2>
-              <div className="card p-4">
-                <h3 className="text-sm font-bold text-zinc-700">今週のDOOランキング</h3>
-                <ol className="mt-3 space-y-2">
-                  {stats.weeklyRanking.length === 0 ? (
-                    <li className="text-sm text-zinc-500">データがありません</li>
-                  ) : (
-                    stats.weeklyRanking.map((r) => (
-                      <li
-                        key={r.name}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <span>
-                          <span className="mr-2 font-bold text-brand-600">{r.rank}</span>
-                          {r.name}
-                        </span>
-                        <span className="text-zinc-500">{r.count}件</span>
-                      </li>
-                    ))
-                  )}
-                </ol>
-              </div>
-            </section>
-          )}
         </main>
 
         <RightSidebar failures={timeline.failures} />
@@ -130,7 +112,7 @@ export function HomeApp() {
       <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-zinc-200 bg-white lg:hidden">
         <div className="mx-auto flex max-w-lg">
           <MobileTab active={view === "home" || view === "timeline"} onClick={() => setView("home")} label="ホーム" />
-          <MobileTab active={view === "create"} onClick={() => setView("create")} label="設定" />
+          <MobileTab active={view === "create"} onClick={() => setView("create")} label="失敗する" />
           <MobileTab active={view === "mine"} onClick={() => setView("mine")} label="自分" />
           <MobileTab active={view === "confession"} onClick={() => setView("confession")} label="懺悔" />
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { FailureCard } from "./FailureCard";
+import type { TimelineFeed } from "./layout/LeftSidebar";
 import type { useFailuresTimeline } from "@/lib/useFailuresTimeline";
 import { useMemo, useState } from "react";
 
@@ -23,9 +24,11 @@ function TimelineSkeleton() {
 
 export function Timeline({
   timeline,
+  feed = "bad",
   onComposeClick,
 }: {
   timeline: TimelineState;
+  feed?: TimelineFeed;
   onComposeClick?: () => void;
 }) {
   const { failures, loading, error, newIds, refresh } = timeline;
@@ -33,6 +36,10 @@ export function Timeline({
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
+    if (feed === "good") {
+      return [];
+    }
+
     let list = [...failures];
     if (tab === "popular") {
       list.sort((a, b) => b.donation_amount - a.donation_amount);
@@ -52,7 +59,7 @@ export function Timeline({
       );
     }
     return list;
-  }, [failures, tab, query]);
+  }, [failures, tab, query, feed]);
 
   const tabs: { id: FeedTab; label: string }[] = [
     { id: "timeline", label: "タイムライン" },
@@ -134,10 +141,21 @@ export function Timeline({
 
       {!loading && !error && filtered.length === 0 && (
         <div className="rounded-xl border border-dashed border-zinc-200 bg-white px-6 py-12 text-center">
-          <p className="font-semibold text-zinc-600">まだ失敗がありません</p>
-          <p className="text-empty-hint mt-2">
-            タスクの締切を過ぎると、ここに自動で流れてきます。
-          </p>
+          {feed === "good" ? (
+            <>
+              <p className="font-semibold text-emerald-600">まだ good 投稿がありません</p>
+              <p className="text-empty-hint mt-2">
+                締切前に逃げ切った成功は、いずれここに流れる予定です。
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-semibold text-zinc-600">まだ失敗がありません</p>
+              <p className="text-empty-hint mt-2">
+                タスクの締切を過ぎると、ここに自動で流れてきます。
+              </p>
+            </>
+          )}
         </div>
       )}
 

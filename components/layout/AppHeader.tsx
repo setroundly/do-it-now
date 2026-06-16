@@ -6,7 +6,7 @@ import { GoogleLoginButton } from "@/components/GoogleLoginButton";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useAppAuth } from "@/lib/useAppAuth";
 
-type NavView = "home" | "timeline" | "ranking";
+type NavView = "home" | "timeline";
 
 export function AppHeader({
   activeView,
@@ -37,10 +37,7 @@ export function AppHeader({
             ホーム
           </button>
           <button type="button" onClick={() => onNavigate("timeline")} className={navClass("timeline")}>
-            みんなの失敗
-          </button>
-          <button type="button" onClick={() => onNavigate("ranking")} className={navClass("ranking")}>
-            ランキング
+            タイムライン
           </button>
         </nav>
 
