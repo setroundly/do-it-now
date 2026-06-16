@@ -1,7 +1,6 @@
 "use client";
 
 import { FailureCard } from "./FailureCard";
-import type { TimelineFeed } from "@/lib/timelineFeed";
 import type { useFailuresTimeline } from "@/lib/useFailuresTimeline";
 import { useMemo, useState } from "react";
 
@@ -29,14 +28,9 @@ export function Timeline({
   onComposeClick?: () => void;
 }) {
   const { failures, loading, error, newIds, refresh } = timeline;
-  const [feed, setFeed] = useState<TimelineFeed>("bad");
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
-    if (feed === "good") {
-      return [];
-    }
-
     let list = [...failures];
     list.sort(
       (a, b) =>
@@ -53,7 +47,7 @@ export function Timeline({
       );
     }
     return list;
-  }, [failures, query, feed]);
+  }, [failures, query]);
 
   return (
     <div className="flex flex-col">
@@ -65,25 +59,12 @@ export function Timeline({
         今日は何を DOO（失敗）しましたか？
       </button>
 
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <FeedEmojiButton
-            emoji="👍"
-            label="good"
-            active={feed === "good"}
-            onClick={() => setFeed("good")}
-          />
-          <FeedEmojiButton
-            emoji="👎"
-            label="bad"
-            active={feed === "bad"}
-            onClick={() => setFeed("bad")}
-          />
-        </div>
+      <div className="mb-4 flex items-center justify-between gap-2">
         <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
           Live
         </span>
+        <span className="text-[10px] text-zinc-400">{filtered.length}件</span>
       </div>
 
       <div className="mb-4 lg:hidden">
@@ -94,10 +75,6 @@ export function Timeline({
           placeholder="失敗を検索…"
           className="input py-2 text-sm"
         />
-      </div>
-
-      <div className="mb-4 flex justify-end">
-        <span className="text-[10px] text-zinc-400">{filtered.length}件</span>
       </div>
 
       {loading && (
@@ -122,29 +99,10 @@ export function Timeline({
 
       {!loading && !error && filtered.length === 0 && (
         <div className="rounded-xl border border-dashed border-zinc-200 bg-white px-6 py-12 text-center">
-          {feed === "good" ? (
-            <>
-              <p className="text-3xl" aria-hidden>
-                👍
-              </p>
-              <p className="mt-2 font-semibold text-emerald-600">
-                まだ good 投稿がありません
-              </p>
-              <p className="text-empty-hint mt-2">
-                締切前に逃げ切った成功は、いずれここに流れる予定です。
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-3xl" aria-hidden>
-                👎
-              </p>
-              <p className="mt-2 font-semibold text-zinc-600">まだ失敗がありません</p>
-              <p className="text-empty-hint mt-2">
-                タスクの締切を過ぎると、ここに自動で流れてきます。
-              </p>
-            </>
-          )}
+          <p className="font-semibold text-zinc-600">まだ失敗がありません</p>
+          <p className="text-empty-hint mt-2">
+            タスクの締切を過ぎると、ここに自動で流れてきます。
+          </p>
         </div>
       )}
 
@@ -168,33 +126,5 @@ export function Timeline({
         </button>
       )}
     </div>
-  );
-}
-
-function FeedEmojiButton({
-  emoji,
-  label,
-  active,
-  onClick,
-}: {
-  emoji: string;
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      aria-pressed={active}
-      className={`flex h-11 w-11 items-center justify-center rounded-xl text-2xl transition ${
-        active
-          ? "bg-brand-100 ring-2 ring-brand-400 ring-offset-1"
-          : "bg-zinc-100 hover:bg-zinc-200"
-      }`}
-    >
-      {emoji}
-    </button>
   );
 }
