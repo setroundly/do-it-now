@@ -1,7 +1,6 @@
 "use client";
 
 import { UserAvatar, userHandle } from "@/components/UserAvatar";
-import { GoogleLoginButton } from "@/components/GoogleLoginButton";
 import { useAppAuth } from "@/lib/useAppAuth";
 
 export type SidebarView =
@@ -39,11 +38,6 @@ export function LeftSidebar({ active, onNavigate }: LeftSidebarProps) {
               <p className="truncate text-xs text-zinc-500">{userHandle(displayName)}</p>
             </div>
           </div>
-          {!loading && !user && (
-            <div className="mt-3">
-              <GoogleLoginButton className="w-full" />
-            </div>
-          )}
           {!loading && user && (
             <button
               type="button"

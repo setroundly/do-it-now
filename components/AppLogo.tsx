@@ -1,4 +1,7 @@
+import Image from "next/image";
 import { APP_TAGLINE } from "@/lib/branding";
+
+const LOGO_SRC = "/doo-it-now-logo.png";
 
 interface AppLogoProps {
   variant?: "default" | "header";
@@ -15,7 +18,16 @@ export function AppLogo({
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <LogoWordmark light={onHeader} />
+      <Image
+        src={LOGO_SRC}
+        alt="DOO IT NOW"
+        width={160}
+        height={80}
+        className={`w-auto object-contain ${
+          onHeader ? "h-8 rounded-md sm:h-9" : "h-10 sm:h-11"
+        }`}
+        priority={onHeader}
+      />
       {showTagline && (
         <p
           className={`hidden text-[11px] font-medium sm:block ${
@@ -29,58 +41,21 @@ export function AppLogo({
   );
 }
 
-function LogoWordmark({ light }: { light?: boolean }) {
+export function LogoMark({
+  size = 32,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) {
   return (
-    <span
-      className={`font-black tracking-tight ${
-        light ? "text-white" : "text-brand-700"
-      } text-lg sm:text-xl`}
-      aria-label="DOO IT NOW"
-    >
-      D
-      <span className="relative inline-block">
-        <span className="relative z-10">O</span>
-        <span
-          className={`absolute left-1/2 top-[0.35em] h-1.5 w-1.5 -translate-x-1/2 rounded-full ${
-            light ? "bg-white" : "bg-brand-500"
-          }`}
-          aria-hidden
-        />
-        <span
-          className={`absolute left-[calc(50%+0.55em)] top-[0.35em] h-1.5 w-1.5 -translate-x-1/2 rounded-full ${
-            light ? "bg-white" : "bg-brand-500"
-          }`}
-          aria-hidden
-        />
-      </span>
-      <span className="mx-0.5"> </span>
-      IT NOW
-    </span>
-  );
-}
-
-export function LogoMark({ size = 32, className = "" }: { size?: number; className?: string }) {
-  return (
-    <svg
-      width={size}
+    <Image
+      src={LOGO_SRC}
+      alt=""
+      width={size * 2}
       height={size}
-      viewBox="0 0 32 32"
-      fill="none"
-      className={className}
+      className={`rounded object-contain ${className}`}
       aria-hidden
-    >
-      <rect width="32" height="32" rx="8" fill="#2563eb" />
-      <text
-        x="16"
-        y="21"
-        textAnchor="middle"
-        fill="white"
-        fontSize="11"
-        fontWeight="900"
-        fontFamily="sans-serif"
-      >
-        DOO
-      </text>
-    </svg>
+    />
   );
 }
