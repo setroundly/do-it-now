@@ -1,11 +1,10 @@
 "use client";
 
 import { FailureCard } from "./FailureCard";
-import type { TimelineFeed } from "./layout/LeftSidebar";
+import type { TimelineFeed } from "@/lib/timelineFeed";
 import type { useFailuresTimeline } from "@/lib/useFailuresTimeline";
 import { useMemo, useState } from "react";
 
-type FeedTab = "timeline" | "following" | "popular" | "latest";
 type TimelineState = ReturnType<typeof useFailuresTimeline>;
 
 function TimelineSkeleton() {
@@ -24,15 +23,13 @@ function TimelineSkeleton() {
 
 export function Timeline({
   timeline,
-  feed = "bad",
   onComposeClick,
 }: {
   timeline: TimelineState;
-  feed?: TimelineFeed;
   onComposeClick?: () => void;
 }) {
   const { failures, loading, error, newIds, refresh } = timeline;
-  const [tab, setTab] = useState<FeedTab>("timeline");
+  const [feed, setFeed] = useState<TimelineFeed>("bad");
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -41,14 +38,11 @@ export function Timeline({
     }
 
     let list = [...failures];
-    if (tab === "popular") {
-      list.sort((a, b) => b.donation_amount - a.donation_amount);
-    } else {
-      list.sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-    }
+    list.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
     if (query.trim()) {
       const q = query.trim().toLowerCase();
       list = list.filter(
@@ -59,14 +53,7 @@ export function Timeline({
       );
     }
     return list;
-  }, [failures, tab, query, feed]);
-
-  const tabs: { id: FeedTab; label: string }[] = [
-    { id: "timeline", label: "タイムライン" },
-    { id: "following", label: "フォロー中" },
-    { id: "popular", label: "人気" },
-    { id: "latest", label: "最新" },
-  ];
+  }, [failures, query, feed]);
 
   return (
     <div className="flex flex-col">
@@ -78,28 +65,26 @@ export function Timeline({
         今日は何を DOO（失敗）しましたか？
       </button>
 
-      <div className="mb-3 flex gap-1 overflow-x-auto border-b border-zinc-200 pb-0 [scrollbar-width:none]">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={`shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition ${
-              tab === t.id
-                ? "border-brand-600 text-brand-700"
-                : "border-transparent text-zinc-500 hover:text-zinc-700"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <FeedEmojiButton
+            emoji="👍"
+            label="good"
+            active={feed === "good"}
+            onClick={() => setFeed("good")}
+          />
+          <FeedEmojiButton
+            emoji="👎"
+            label="bad"
+            active={feed === "bad"}
+            onClick={() => setFeed("bad")}
+          />
+        </div>
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+          Live
+        </span>
       </div>
-
-      {tab === "following" && (
-        <p className="mb-3 rounded-lg bg-zinc-50 px-3 py-2 text-xs text-zinc-500">
-          フォロー機能は準備中です。いまは全員の失敗を表示しています。
-        </p>
-      )}
 
       <div className="mb-4 lg:hidden">
         <input
@@ -111,11 +96,7 @@ export function Timeline({
         />
       </div>
 
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-          Live
-        </span>
+      <div className="mb-4 flex justify-end">
         <span className="text-[10px] text-zinc-400">{filtered.length}件</span>
       </div>
 
@@ -143,14 +124,22 @@ export function Timeline({
         <div className="rounded-xl border border-dashed border-zinc-200 bg-white px-6 py-12 text-center">
           {feed === "good" ? (
             <>
-              <p className="font-semibold text-emerald-600">まだ good 投稿がありません</p>
+              <p className="text-3xl" aria-hidden>
+                👍
+              </p>
+              <p className="mt-2 font-semibold text-emerald-600">
+                まだ good 投稿がありません
+              </p>
               <p className="text-empty-hint mt-2">
                 締切前に逃げ切った成功は、いずれここに流れる予定です。
               </p>
             </>
           ) : (
             <>
-              <p className="font-semibold text-zinc-600">まだ失敗がありません</p>
+              <p className="text-3xl" aria-hidden>
+                👎
+              </p>
+              <p className="mt-2 font-semibold text-zinc-600">まだ失敗がありません</p>
               <p className="text-empty-hint mt-2">
                 タスクの締切を過ぎると、ここに自動で流れてきます。
               </p>
@@ -179,5 +168,33 @@ export function Timeline({
         </button>
       )}
     </div>
+  );
+}
+
+function FeedEmojiButton({
+  emoji,
+  label,
+  active,
+  onClick,
+}: {
+  emoji: string;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      aria-pressed={active}
+      className={`flex h-11 w-11 items-center justify-center rounded-xl text-2xl transition ${
+        active
+          ? "bg-brand-100 ring-2 ring-brand-400 ring-offset-1"
+          : "bg-zinc-100 hover:bg-zinc-200"
+      }`}
+    >
+      {emoji}
+    </button>
   );
 }

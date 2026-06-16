@@ -54,27 +54,8 @@ export function FailureCard({ failure, isNew }: FailureCardProps) {
               連続{failure.consecutive_fail_count}敗
             </span>
           )}
-
-          <div className="mt-3 flex max-w-xs items-center justify-between text-zinc-400">
-            <ActionIcon label="コメント" />
-            <ActionIcon label="リポスト" />
-            <ActionIcon label="いいね" />
-            <ActionIcon label="共有" />
-          </div>
         </div>
       </div>
     </article>
-  );
-}
-
-function ActionIcon({ label }: { label: string }) {
-  return (
-    <button
-      type="button"
-      className="rounded-lg p-1.5 transition hover:bg-zinc-100 hover:text-brand-600"
-      aria-label={label}
-    >
-      <span className="block h-4 w-4 rounded border border-current opacity-60" />
-    </button>
   );
 }

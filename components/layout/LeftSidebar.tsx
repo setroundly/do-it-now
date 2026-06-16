@@ -10,21 +10,12 @@ export type SidebarView =
   | "mine"
   | "confession";
 
-export type TimelineFeed = "good" | "bad";
-
 interface LeftSidebarProps {
   active: SidebarView;
-  timelineFeed: TimelineFeed;
   onNavigate: (view: SidebarView) => void;
-  onTimelineFeedChange: (feed: TimelineFeed) => void;
 }
 
-export function LeftSidebar({
-  active,
-  timelineFeed,
-  onNavigate,
-  onTimelineFeedChange,
-}: LeftSidebarProps) {
+export function LeftSidebar({ active, onNavigate }: LeftSidebarProps) {
   const { user, loading, signOut } = useAppAuth();
   const displayName = user?.display_name ?? "ゲスト";
 
@@ -36,11 +27,6 @@ export function LeftSidebar({
     }`;
 
   const showTimeline = active === "home" || active === "timeline";
-
-  const selectFeed = (feed: TimelineFeed) => {
-    onTimelineFeedChange(feed);
-    onNavigate("home");
-  };
 
   return (
     <aside className="hidden w-[240px] shrink-0 lg:block">
@@ -86,29 +72,13 @@ export function LeftSidebar({
             </span>
           </button>
 
-          <div>
-            <button
-              type="button"
-              onClick={() => onNavigate("home")}
-              className={linkClass(showTimeline ? "home" : "timeline")}
-            >
-              <NavIcon name="timeline" /> タイムライン
-            </button>
-            <div className="ml-10 mt-1 flex gap-1.5 pr-2">
-              <FeedPill
-                label="good"
-                active={showTimeline && timelineFeed === "good"}
-                tone="good"
-                onClick={() => selectFeed("good")}
-              />
-              <FeedPill
-                label="bad"
-                active={showTimeline && timelineFeed === "bad"}
-                tone="bad"
-                onClick={() => selectFeed("bad")}
-              />
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={() => onNavigate("home")}
+            className={linkClass(showTimeline ? "home" : "timeline")}
+          >
+            <NavIcon name="timeline" /> タイムライン
+          </button>
 
           <button type="button" onClick={() => onNavigate("mine")} className={linkClass("mine")}>
             <NavIcon name="task" /> 自分のタスク
@@ -130,37 +100,6 @@ export function LeftSidebar({
         </div>
       </div>
     </aside>
-  );
-}
-
-function FeedPill({
-  label,
-  active,
-  tone,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  tone: "good" | "bad";
-  onClick: () => void;
-}) {
-  const base =
-    tone === "good"
-      ? active
-        ? "bg-emerald-600 text-white"
-        : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-      : active
-        ? "bg-fail text-white"
-        : "bg-red-50 text-fail hover:bg-red-100";
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex-1 rounded-lg px-2 py-1 text-xs font-bold uppercase tracking-wide transition ${base}`}
-    >
-      {label}
-    </button>
   );
 }
 

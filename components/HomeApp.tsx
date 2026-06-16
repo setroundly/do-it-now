@@ -9,11 +9,7 @@ import { MyTasks } from "./MyTasks";
 import { ConfessionRoom } from "./ConfessionRoom";
 import { GoogleLoginButton } from "./GoogleLoginButton";
 import { AppHeader } from "./layout/AppHeader";
-import {
-  LeftSidebar,
-  type SidebarView,
-  type TimelineFeed,
-} from "./layout/LeftSidebar";
+import { LeftSidebar, type SidebarView } from "./layout/LeftSidebar";
 import { RightSidebar } from "./layout/RightSidebar";
 import { useAppAuth } from "@/lib/useAppAuth";
 
@@ -28,7 +24,6 @@ function viewToHeader(view: View): "home" | "timeline" {
 
 export function HomeApp() {
   const [view, setView] = useState<View>("home");
-  const [timelineFeed, setTimelineFeed] = useState<TimelineFeed>("bad");
   const [taskRefresh, setTaskRefresh] = useState(0);
   const timeline = useFailuresTimeline();
   const { user, loading: authLoading } = useAppAuth();
@@ -51,18 +46,12 @@ export function HomeApp() {
       />
 
       <div className="mx-auto flex w-full max-w-7xl flex-1 gap-0 px-4 lg:gap-6 lg:px-6">
-        <LeftSidebar
-          active={view}
-          timelineFeed={timelineFeed}
-          onNavigate={setView}
-          onTimelineFeedChange={setTimelineFeed}
-        />
+        <LeftSidebar active={view} onNavigate={setView} />
 
         <main className="min-w-0 flex-1 py-4 pb-20 lg:max-w-[600px] lg:pb-6 xl:max-w-[640px]">
           {showFeed && (
             <Timeline
               timeline={timeline}
-              feed={timelineFeed}
               onComposeClick={() => setView("create")}
             />
           )}
