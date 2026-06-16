@@ -24,7 +24,7 @@ export function AppLogo({
         width={240}
         height={120}
         className={`w-auto object-contain ${
-          onHeader ? "h-10 rounded-md sm:h-12" : "h-12 sm:h-14"
+          onHeader ? "h-10 sm:h-12" : "h-12 brightness-0 sm:h-14"
         }`}
         priority={onHeader}
       />
@@ -54,7 +54,7 @@ export function LogoMark({
       alt=""
       width={size * 2}
       height={size}
-      className={`rounded object-contain ${className}`}
+      className={`object-contain brightness-0 ${className}`}
       aria-hidden
     />
   );
