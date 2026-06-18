@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/tasks/fail-overdue",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}

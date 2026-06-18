@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFailOverdue } from "@/lib/useFailOverdue";
 import { useFailuresTimeline } from "@/lib/useFailuresTimeline";
+import { fetchJson } from "@/lib/fetchJson";
 import { Timeline } from "./Timeline";
 import { TaskForm } from "./TaskForm";
 import { MyTasks } from "./MyTasks";
@@ -15,16 +16,10 @@ import { useAppAuth } from "@/lib/useAppAuth";
 
 type View = SidebarView;
 
-function viewToHeader(view: View): "home" | "timeline" {
-  if (view === "timeline" || view === "home") {
-    return view === "home" ? "home" : "timeline";
-  }
-  return "home";
-}
-
 export function HomeApp() {
-  const [view, setView] = useState<View>("home");
+  const [view, setView] = useState<View>("timeline");
   const [taskRefresh, setTaskRefresh] = useState(0);
+  const [hasTasks, setHasTasks] = useState<boolean | null>(null);
   const timeline = useFailuresTimeline();
   const { user, loading: authLoading } = useAppAuth();
 
@@ -33,26 +28,45 @@ export function HomeApp() {
   }, []);
   useFailOverdue(bumpTaskRefresh);
 
-  const showFeed = view === "home" || view === "timeline";
+  useEffect(() => {
+    if (authLoading || !user) {
+      setHasTasks(null);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { res, data } = await fetchJson<{ tasks?: unknown[] }>("/api/tasks");
+        if (cancelled) return;
+        if (!res.ok) {
+          setHasTasks(null);
+          return;
+        }
+        setHasTasks((data.tasks?.length ?? 0) > 0);
+      } catch {
+        if (!cancelled) setHasTasks(null);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, authLoading, taskRefresh]);
 
   return (
     <div className="app-shell flex min-h-screen flex-col text-zinc-900">
-      <AppHeader
-        activeView={viewToHeader(view)}
-        onNavigate={(v) => {
-          if (v === "timeline") setView("timeline");
-          else setView("home");
-        }}
-      />
+      <AppHeader />
 
       <div className="mx-auto flex w-full max-w-7xl flex-1 gap-0 px-4 lg:gap-6 lg:px-6">
         <LeftSidebar active={view} onNavigate={setView} />
 
         <main className="min-w-0 flex-1 py-4 pb-20 lg:max-w-[600px] lg:pb-6 xl:max-w-[640px]">
-          {showFeed && (
+          {view === "timeline" && (
             <Timeline
               timeline={timeline}
-              onComposeClick={() => setView("create")}
+              showOnboarding={Boolean(user && hasTasks === false)}
+              onCreateClick={() => setView("create")}
             />
           )}
 
@@ -100,7 +114,7 @@ export function HomeApp() {
 
       <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-zinc-200 bg-white lg:hidden">
         <div className="mx-auto flex max-w-lg">
-          <MobileTab active={view === "home" || view === "timeline"} onClick={() => setView("home")} label="ホーム" />
+          <MobileTab active={view === "timeline"} onClick={() => setView("timeline")} label="タイムライン" />
           <MobileTab active={view === "create"} onClick={() => setView("create")} label="失敗する" />
           <MobileTab active={view === "mine"} onClick={() => setView("mine")} label="自分" />
           <MobileTab active={view === "confession"} onClick={() => setView("confession")} label="懺悔" />

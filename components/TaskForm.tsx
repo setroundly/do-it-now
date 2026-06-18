@@ -31,8 +31,6 @@ export function TaskForm({ onCreated }: TaskFormProps) {
   const [donateUrl, setDonateUrl] = useState("");
   const [customDonationName, setCustomDonationName] = useState("");
   const [customDonateUrl, setCustomDonateUrl] = useState("");
-  const [notifyName, setNotifyName] = useState("");
-  const [notifyEmail, setNotifyEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,12 +94,6 @@ export function TaskForm({ onCreated }: TaskFormProps) {
           penaltyAmount: Number(penaltyAmount),
           donationDestination: finalName,
           donateUrl: finalUrl || undefined,
-          ...(notifyEmail.trim()
-            ? {
-                notifyName: notifyName.trim() || undefined,
-                notifyEmail: notifyEmail.trim(),
-              }
-            : {}),
         }),
       });
 
@@ -121,8 +113,6 @@ export function TaskForm({ onCreated }: TaskFormProps) {
       setDonateUrl("");
       setCustomDonationName("");
       setCustomDonateUrl("");
-      setNotifyName("");
-      setNotifyEmail("");
 
       onCreated?.({
         userId: data.user.id,
@@ -200,37 +190,6 @@ export function TaskForm({ onCreated }: TaskFormProps) {
         onCustomNameChange={setCustomDonationName}
         onCustomUrlChange={setCustomDonateUrl}
       />
-
-      <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-        <p className="mb-1 text-xs font-semibold text-zinc-600">
-          見届け人
-        </p>
-        <p className="mb-3 text-xs text-zinc-500">
-          任意。メールを入れた場合だけ、失敗時に通知します。
-        </p>
-        <div className="flex flex-col gap-4">
-          <Field label="名前">
-            <input
-              className="input"
-              value={notifyName}
-              onChange={(e) => setNotifyName(e.target.value)}
-              placeholder="上司（任意）"
-              maxLength={64}
-            />
-          </Field>
-          <Field label="メール">
-            <input
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              className="input"
-              value={notifyEmail}
-              onChange={(e) => setNotifyEmail(e.target.value)}
-              placeholder="friend@example.com（任意）"
-            />
-          </Field>
-        </div>
-      </div>
 
       {error && (
         <p className="rounded-xl border border-fail/30 bg-fail/10 px-3 py-2 text-sm text-fail">

@@ -24,7 +24,7 @@ npm run dev
 ### リアルタイムタイムライン
 
 - 締切超過した失敗は `failures` テーブルへ保存し、**Supabase Realtime** で即時反映
-- 締切超過タスクの失敗化は、アプリ表示時に `/api/tasks/fail-overdue` を自動実行（Vercel Cron 不要）
+- 締切超過タスクの失敗化は **Vercel Cron**（15分ごと）＋アプリ表示時の即時実行
 - Supabase SQL Editor で `supabase/failures.sql` を実行
 - 続けて `supabase/realtime-setup.sql` を実行し、**Database → Replication** で `failures` と `confession_posts` を ON
 
@@ -40,6 +40,7 @@ npm run dev
 2. **SQL Editor** で `supabase/schema.sql` を実行
 3. 続けて `supabase/confession.sql` を実行（懺悔室）
 4. 続けて `supabase/failures.sql` を実行（リアルタイムタイムライン）
+5. 続けて `supabase/migration-donated-at.sql` を実行（寄付申告）
 5. **Database → Replication** で `failures` テーブルの Realtime を ON
 5. **Settings → API** から URL / anon key / service_role key を `.env.local` に設定
 6. **Google ログイン**（タスク作成・自分のタスクに必要）:

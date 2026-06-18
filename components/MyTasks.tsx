@@ -13,6 +13,7 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [markingId, setMarkingId] = useState<string | null>(null);
 
   const fetchTasks = useCallback(async () => {
     if (!user) {
@@ -82,6 +83,26 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
     }
     const data = await parseJsonResponse<{ error?: string }>(res);
     alert(apiErrorMessage(data, "完了できませんでした"));
+  };
+
+  const toggleDonated = async (task: Task) => {
+    setMarkingId(task.id);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/donated`, {
+        method: task.donated_at ? "DELETE" : "POST",
+      });
+      const data = await parseJsonResponse<{ error?: string; task?: Task }>(res);
+      if (!res.ok || !data.task) {
+        throw new Error(apiErrorMessage(data, "更新に失敗しました"));
+      }
+      setTasks((prev) =>
+        prev.map((t) => (t.id === task.id ? data.task! : t))
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "更新に失敗しました");
+    } finally {
+      setMarkingId(null);
+    }
   };
 
   if (authLoading || loading) {
@@ -161,6 +182,20 @@ export function MyTasks({ refreshKey }: { refreshKey?: number }) {
               {task.donation_destination}へ寄付する
               <span aria-hidden>↗</span>
             </a>
+          )}
+          {task.status === "failed" && (
+            <label className="mt-3 flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm">
+              <input
+                type="checkbox"
+                checked={Boolean(task.donated_at)}
+                disabled={markingId === task.id}
+                onChange={() => void toggleDonated(task)}
+                className="h-4 w-4 rounded border-zinc-300 text-brand-600"
+              />
+              <span className={task.donated_at ? "font-semibold text-emerald-700" : "text-zinc-700"}>
+                {task.donated_at ? "寄付済み（自己申告）" : "寄付した（自己申告）"}
+              </span>
+            </label>
           )}
           {task.status === "failed" && !donateUrl && (
             <p className="mt-2 text-xs text-zinc-500">

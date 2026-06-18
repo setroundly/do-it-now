@@ -11,13 +11,6 @@ const createSchema = z.object({
   penaltyAmount: z.number().int().positive(),
   donationDestination: z.string().min(1).max(120),
   donateUrl: z.string().url().optional().or(z.literal("")),
-  notifyName: z.string().max(64).optional(),
-  notifyEmail: z
-    .string()
-    .optional()
-    .refine((v) => !v || v.trim() === "" || z.string().email().safeParse(v.trim()).success, {
-      message: "Invalid email",
-    }),
 });
 
 export async function GET(request: NextRequest) {
@@ -135,22 +128,6 @@ export async function POST(request: NextRequest) {
         { error: taskError?.message ?? "Failed to create task" },
         { status: 500 }
       );
-    }
-
-    const notifyEmail = data.notifyEmail?.trim();
-    if (notifyEmail) {
-      const { error: notifyError } = await supabase
-        .from("notification_targets")
-        .insert({
-          task_id: task.id,
-          type: "email",
-          label: data.notifyName?.trim() || "見届け人",
-          destination: notifyEmail,
-        });
-
-      if (notifyError) {
-        return NextResponse.json({ error: notifyError.message }, { status: 500 });
-      }
     }
 
     return NextResponse.json({

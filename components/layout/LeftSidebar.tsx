@@ -4,9 +4,8 @@ import { UserAvatar, userHandle } from "@/components/UserAvatar";
 import { useAppAuth } from "@/lib/useAppAuth";
 
 export type SidebarView =
-  | "home"
-  | "create"
   | "timeline"
+  | "create"
   | "mine"
   | "confession";
 
@@ -25,8 +24,6 @@ export function LeftSidebar({ active, onNavigate }: LeftSidebarProps) {
         ? "bg-brand-50 text-brand-700"
         : "text-zinc-600 hover:bg-zinc-100"
     }`;
-
-  const showTimeline = active === "home" || active === "timeline";
 
   return (
     <aside className="hidden w-[240px] shrink-0 lg:block">
@@ -54,8 +51,12 @@ export function LeftSidebar({ active, onNavigate }: LeftSidebarProps) {
         </div>
 
         <nav className="space-y-0.5">
-          <button type="button" onClick={() => onNavigate("home")} className={linkClass("home")}>
-            <NavIcon name="home" /> ホーム
+          <button
+            type="button"
+            onClick={() => onNavigate("timeline")}
+            className={linkClass("timeline")}
+          >
+            <NavIcon name="timeline" /> タイムライン
           </button>
 
           <button type="button" onClick={() => onNavigate("create")} className={linkClass("create")}>
@@ -70,14 +71,6 @@ export function LeftSidebar({ active, onNavigate }: LeftSidebarProps) {
                 （目標を設定する）
               </span>
             </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onNavigate("home")}
-            className={linkClass(showTimeline ? "home" : "timeline")}
-          >
-            <NavIcon name="timeline" /> タイムライン
           </button>
 
           <button type="button" onClick={() => onNavigate("mine")} className={linkClass("mine")}>
@@ -112,10 +105,10 @@ function NavIcon({
 }) {
   const c = `h-4 w-4 shrink-0 ${className || "text-current"}`;
   switch (name) {
-    case "home":
+    case "timeline":
       return (
         <svg className={c} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       );
     case "pencil":

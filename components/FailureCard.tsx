@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { formatJstRelative } from "@/lib/datetime";
 import { failureDonationLine } from "@/lib/failures";
 import type { Failure } from "@/lib/types";
 import { UserAvatar, userHandle } from "./UserAvatar";
-
-type Reaction = "good" | "bad" | null;
 
 interface FailureCardProps {
   failure: Failure;
@@ -15,11 +12,6 @@ interface FailureCardProps {
 
 export function FailureCard({ failure, isNew }: FailureCardProps) {
   const name = failure.user_name.trim() || "匿名";
-  const [reaction, setReaction] = useState<Reaction>(null);
-
-  const toggle = (next: Reaction) => {
-    setReaction((current) => (current === next ? null : next));
-  };
 
   return (
     <article
@@ -62,51 +54,8 @@ export function FailureCard({ failure, isNew }: FailureCardProps) {
               連続{failure.consecutive_fail_count}敗
             </span>
           )}
-
-          <div className="mt-3 flex items-center gap-2">
-            <ReactionButton
-              emoji="👍"
-              label="good"
-              active={reaction === "good"}
-              onClick={() => toggle("good")}
-            />
-            <ReactionButton
-              emoji="👎"
-              label="bad"
-              active={reaction === "bad"}
-              onClick={() => toggle("bad")}
-            />
-          </div>
         </div>
       </div>
     </article>
-  );
-}
-
-function ReactionButton({
-  emoji,
-  label,
-  active,
-  onClick,
-}: {
-  emoji: string;
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      aria-pressed={active}
-      className={`rounded-lg px-2 py-1 text-xl transition ${
-        active
-          ? "bg-brand-50 ring-2 ring-brand-300"
-          : "hover:bg-zinc-100"
-      }`}
-    >
-      {emoji}
-    </button>
   );
 }

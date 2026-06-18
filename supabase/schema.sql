@@ -22,6 +22,7 @@ create table public.tasks (
   status task_status not null default 'pending',
   completed_at timestamptz,
   failed_at timestamptz,
+  donated_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

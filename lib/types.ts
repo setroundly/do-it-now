@@ -19,6 +19,7 @@ export interface Task {
   status: TaskStatus;
   completed_at: string | null;
   failed_at: string | null;
+  donated_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -77,8 +78,6 @@ export interface CreateTaskPayload {
   penaltyAmount: number;
   donationDestination: string;
   donateUrl?: string;
-  notifyName?: string;
-  notifyEmail?: string;
 }
 
 export interface TaskWithMeta extends Task {

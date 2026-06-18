@@ -1,6 +1,7 @@
 "use client";
 
 import { FailureCard } from "./FailureCard";
+import { FirstTaskBanner } from "./FirstTaskBanner";
 import type { useFailuresTimeline } from "@/lib/useFailuresTimeline";
 import { useMemo, useState } from "react";
 
@@ -22,10 +23,12 @@ function TimelineSkeleton() {
 
 export function Timeline({
   timeline,
-  onComposeClick,
+  showOnboarding,
+  onCreateClick,
 }: {
   timeline: TimelineState;
-  onComposeClick?: () => void;
+  showOnboarding?: boolean;
+  onCreateClick?: () => void;
 }) {
   const { failures, loading, error, newIds, refresh } = timeline;
   const [query, setQuery] = useState("");
@@ -51,20 +54,27 @@ export function Timeline({
 
   return (
     <div className="flex flex-col">
-      <button
-        type="button"
-        onClick={onComposeClick}
-        className="card mb-4 w-full px-4 py-3 text-left text-zinc-400 transition hover:border-brand-200 hover:text-zinc-500"
-      >
-        今日は何を DOO（失敗）しましたか？
-      </button>
+      {showOnboarding && onCreateClick && (
+        <FirstTaskBanner onCreateClick={onCreateClick} />
+      )}
 
       <div className="mb-4 flex items-center justify-between gap-2">
         <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
           Live
         </span>
-        <span className="text-[10px] text-zinc-400">{filtered.length}件</span>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] text-zinc-400">{filtered.length}件</span>
+          {!loading && (
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              className="text-xs font-medium text-brand-600 hover:underline"
+            >
+              更新
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mb-4 lg:hidden">
@@ -114,16 +124,6 @@ export function Timeline({
             </li>
           ))}
         </ul>
-      )}
-
-      {!loading && filtered.length > 0 && (
-        <button
-          type="button"
-          onClick={() => void refresh()}
-          className="mt-4 w-full rounded-xl border border-zinc-200 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50"
-        >
-          さらに読み込む
-        </button>
       )}
     </div>
   );

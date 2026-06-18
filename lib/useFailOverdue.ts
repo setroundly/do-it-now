@@ -4,7 +4,7 @@ import { useCallback, useEffect } from "react";
 
 const FAIL_OVERDUE_INTERVAL_MS = 60_000;
 
-/** 締切超過タスクの失敗処理・見届け人メール（全タブで動かす） */
+/** 締切超過タスクの失敗処理（全タブで動かす） */
 export function useFailOverdue(onProcessed?: () => void) {
   const onProcessedStable = useCallback(() => {
     onProcessed?.();
