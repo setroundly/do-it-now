@@ -7,7 +7,7 @@
 - Next.js App Router + TypeScript + Tailwind CSS
 - Supabase (Postgres)
 - Resend (メール)
-- Vercel (ホスティング + Cron)
+- Vercel (ホスティング)
 
 ## ローカル起動
 
@@ -24,8 +24,10 @@ npm run dev
 ### リアルタイムタイムライン
 
 - 締切超過した失敗は `failures` テーブルへ保存し、**Supabase Realtime** で即時反映
-- 締切超過タスクの失敗化は **Vercel Cron**（15分ごと）＋アプリ表示時の即時実行
-- **締切24時間前・1時間前**に、ログインユーザーの Google メールへ煽り系リマインド（Resend）
+- 締切超過タスクの失敗化は **アプリ表示中** に自動実行（1分ごと）
+- **締切24時間前・1時間前**に Google メールへ煽り系リマインド（Resend）。アプリを開いている間も同様にチェック
+- Vercel **Hobby** プランは Cron が **1日1回まで** のため、`vercel.json` の15分 Cron は使わない（デプロイ失敗の原因になる）
+- アプリを開かない時間帯もリマインドしたい場合は [cron-job.org](https://cron-job.org) 等から 15 分ごとに `POST /api/tasks/send-reminders` と `POST /api/tasks/fail-overdue` を叩く（`Authorization: Bearer CRON_SECRET`）
 - Supabase SQL Editor で `supabase/failures.sql` を実行
 - 続けて `supabase/realtime-setup.sql` を実行し、**Database → Replication** で `failures` と `confession_posts` を ON
 

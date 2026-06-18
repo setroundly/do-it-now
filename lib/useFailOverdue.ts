@@ -2,9 +2,19 @@
 
 import { useCallback, useEffect } from "react";
 
-const FAIL_OVERDUE_INTERVAL_MS = 60_000;
+const BACKGROUND_TASK_INTERVAL_MS = 60_000;
 
-/** 締切超過タスクの失敗処理（全タブで動かす） */
+async function runBackgroundTasks(): Promise<boolean> {
+  const results = await Promise.allSettled([
+    fetch("/api/tasks/fail-overdue", { method: "POST" }),
+    fetch("/api/tasks/send-reminders", { method: "POST" }),
+  ]);
+  return results.some(
+    (r) => r.status === "fulfilled" && r.value.ok
+  );
+}
+
+/** 締切超過の失敗化 + リマインド（アプリ表示中に定期実行） */
 export function useFailOverdue(onProcessed?: () => void) {
   const onProcessedStable = useCallback(() => {
     onProcessed?.();
@@ -15,15 +25,15 @@ export function useFailOverdue(onProcessed?: () => void) {
 
     const run = async () => {
       try {
-        const res = await fetch("/api/tasks/fail-overdue", { method: "POST" });
-        if (!cancelled && res.ok) onProcessedStable();
+        const ok = await runBackgroundTasks();
+        if (!cancelled && ok) onProcessedStable();
       } catch {
         // 表示は続行
       }
     };
 
     void run();
-    const timer = window.setInterval(run, FAIL_OVERDUE_INTERVAL_MS);
+    const timer = window.setInterval(run, BACKGROUND_TASK_INTERVAL_MS);
     return () => {
       cancelled = true;
       window.clearInterval(timer);

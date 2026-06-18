@@ -20,7 +20,10 @@ const CLIENT_FAIL_INTERVAL_MS = 60_000;
 
 async function processOverdueClient() {
   try {
-    await fetch("/api/tasks/fail-overdue", { method: "POST" });
+    await Promise.allSettled([
+      fetch("/api/tasks/fail-overdue", { method: "POST" }),
+      fetch("/api/tasks/send-reminders", { method: "POST" }),
+    ]);
   } catch {
     // 失敗してもタイムライン表示は続行
   }
