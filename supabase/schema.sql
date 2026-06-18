@@ -23,6 +23,8 @@ create table public.tasks (
   completed_at timestamptz,
   failed_at timestamptz,
   donated_at timestamptz,
+  reminded_24h_at timestamptz,
+  reminded_1h_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

@@ -3,6 +3,10 @@
     {
       "path": "/api/tasks/fail-overdue",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/tasks/send-reminders",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

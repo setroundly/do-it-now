@@ -20,6 +20,8 @@ export interface Task {
   completed_at: string | null;
   failed_at: string | null;
   donated_at: string | null;
+  reminded_24h_at: string | null;
+  reminded_1h_at: string | null;
   created_at: string;
   updated_at: string;
 }
